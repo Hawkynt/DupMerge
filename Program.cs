@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 
@@ -271,16 +272,24 @@ namespace DupMerge {
           return;
         }
       }
-      item.Delete();
-      Microsoft.VisualBasic.FileIO.FileSystem.RenameFile(temporaryFile.FullName, item.Name);
+
+      var isAlreadyDeleted = false;
+      try {
+        item.Delete();
+        isAlreadyDeleted = true;
+        Microsoft.VisualBasic.FileIO.FileSystem.RenameFile(temporaryFile.FullName, item.Name);
+      } catch when (isAlreadyDeleted) {
+
+        // undo file deletion
+        temporaryFile.CopyTo(item.FullName, true);
+        throw;
+      }
 
       if (isSymlink) {
         if (configuration.SetReadOnlyAttributeOnNewSymbolicLinks)
-          // FIXME: does not work on links
           item.Attributes |= FileAttributes.ReadOnly;
       } else {
         if (configuration.SetReadOnlyAttributeOnNewHardLinks)
-          // FIXME: does not work on links
           item.Attributes |= FileAttributes.ReadOnly;
       }
 
@@ -302,14 +311,18 @@ namespace DupMerge {
 
       if (configuration.RemoveSymbolicLinks) {
         _RemoveChecksumEntry(item, knownWithThisLength);
-        _ReplaceFileLinkWithFileContent(item);
-        Console.WriteLine($"[Info] Removed Symlink {item.FullName}");
+        try {
+          _ReplaceFileLinkWithFileContent(item);
+          Console.WriteLine($"[Info] Removed Symlink {item.FullName}");
+        } catch (Exception e) {
+          Console.WriteLine($"[Error] Could not remove Symlink {item.FullName}: {e.Message}");
+        }
         return;
       }
 
-      if (configuration.SetReadOnlyAttributeOnExistingSymbolicLinks) {
-        // FIXME: does not work on links
-        item.Attributes = item.Attributes | FileAttributes.ReadOnly;
+      if (configuration.SetReadOnlyAttributeOnExistingSymbolicLinks && ((item.Attributes & FileAttributes.ReadOnly) != FileAttributes.ReadOnly)) {
+        Console.WriteLine($"[Info] Setting read-only attribute on {item.FullName}");
+        item.Attributes |= FileAttributes.ReadOnly;
         return;
       }
 
@@ -331,14 +344,18 @@ namespace DupMerge {
 
       if (configuration.RemoveHardLinks) {
         _RemoveChecksumEntry(item, knownWithThisLength);
-        _ReplaceFileLinkWithFileContent(item);
-        Console.WriteLine($"[Info] Removed Hardlink {item.FullName}");
+        try {
+          _ReplaceFileLinkWithFileContent(item);
+          Console.WriteLine($"[Info] Removed Hardlink {item.FullName}");
+        } catch (Exception e) {
+          Console.WriteLine($"[Error] Could not remove Hardlink {item.FullName}: {e.Message}");
+        }
         return;
       }
 
-      if (configuration.SetReadOnlyAttributeOnExistingHardLinks) {
-        // FIXME: does not work on links
-        item.Attributes = item.Attributes | FileAttributes.ReadOnly;
+      if (configuration.SetReadOnlyAttributeOnExistingHardLinks && ((item.Attributes & FileAttributes.ReadOnly) != FileAttributes.ReadOnly)) {
+        Console.WriteLine($"[Info] Setting read-only attribute on {item.FullName}");
+        item.Attributes |= FileAttributes.ReadOnly;
         return;
       }
 
@@ -346,16 +363,94 @@ namespace DupMerge {
     }
 
     private static void _DeleteLink(FileInfo item) {
-      // FIXME: does not work on links
-      File.SetAttributes(item.FullName, item.Attributes & ~FileAttributes.ReadOnly);
+      item.Attributes &= ~(FileAttributes.ReadOnly | FileAttributes.System | FileAttributes.Hidden);
       item.Delete();
     }
 
     private static void _ReplaceFileLinkWithFileContent(FileInfo item) {
-      var temporaryName = _GetTemporaryFile(item);
-      item.CopyTo(temporaryName.FullName, true);
-      item.Delete();
-      Microsoft.VisualBasic.FileIO.FileSystem.RenameFile(temporaryName.FullName, item.Name);
+      var attributes = item.Attributes;
+
+      const int NOT_YET_STARTED = 0;
+      const int CRASH_COPYING_FILE = 1;
+      const int CRASH_DURING_DELETE = 2;
+      const int CRASH_DURING_RENAME = 3;
+      const int CRASH_DURING_ATTRIBUTION = 4;
+      const int EVERYTHING_DONE = 5;
+      int executionState = NOT_YET_STARTED;
+      FileInfo temporaryName = null;
+      try {
+        temporaryName = _GetTemporaryFile(item);
+        executionState = CRASH_COPYING_FILE;
+
+        // sparse and compress before copying
+        try {
+          temporaryName.Attributes |= (attributes & FileAttributes.SparseFile);
+        } catch {
+          ; // NOTE: could not enable sparse file - who cares?
+        }
+
+        if ((attributes & FileAttributes.Encrypted) == FileAttributes.Encrypted)
+          temporaryName.Encrypt();
+
+        if ((attributes & FileAttributes.Compressed) == FileAttributes.Compressed)
+          try {
+            temporaryName.TryEnableCompression();
+          } catch {
+            ; // NOTE: could not enable compression - who cares?
+          }
+
+        item.CopyTo(temporaryName.FullName, true);
+
+        executionState = CRASH_DURING_DELETE;
+        item.Delete();
+
+        executionState = CRASH_DURING_RENAME;
+        Microsoft.VisualBasic.FileIO.FileSystem.RenameFile(temporaryName.FullName, item.Name);
+
+        executionState = CRASH_DURING_ATTRIBUTION;
+        item.Attributes = attributes & (FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden);
+        item.Attributes |= attributes & FileAttributes.NotContentIndexed;
+
+        executionState = EVERYTHING_DONE;
+      } finally {
+        switch (executionState) {
+          case CRASH_DURING_ATTRIBUTION:
+          {
+            // NOTE: who cares for wrongly set attributes
+            Console.WriteLine($"[Verbose] Exception during attribution {item.FullName}");
+            break;
+          }
+          case NOT_YET_STARTED:
+          case EVERYTHING_DONE:
+          {
+            // nothing yet created or all done - tidy up nothing
+            break;
+          }
+          case CRASH_COPYING_FILE:
+          case CRASH_DURING_DELETE:
+          {
+
+            if (executionState == CRASH_COPYING_FILE)
+              Console.WriteLine($"[Verbose] Exception during CopyFile {item.FullName}");
+            else
+              Console.WriteLine($"[Verbose] Exception during DeleteFile {item.FullName}");
+
+            // just remove temp file
+            temporaryName.Attributes &= ~(FileAttributes.ReadOnly | FileAttributes.Hidden | FileAttributes.System);
+            temporaryName.Delete();
+            break;
+          }
+          case CRASH_DURING_RENAME:
+          {
+
+            Console.WriteLine($"[Verbose] Exception during RenameFile {item.FullName}");
+
+            // undo delete operation
+            temporaryName?.MoveTo(item.FullName);
+            break;
+          }
+        }
+      }
     }
 
     private static void _RemoveChecksumEntry(FileInfo item, ConcurrentDictionary<string, Lazy<string>> knownWithThisLength) {
@@ -369,15 +464,23 @@ namespace DupMerge {
     }
 
     private static FileInfo _GetTemporaryFile(FileInfo file) {
-      var result = new FileInfo(file.FullName + ".$$$");
-      // FIXME: handle can not write to directory
-      while (!result.TryCreate()) {
-        result = new FileInfo(result.FullName + ".$$$");
+      var name = file.FullName;
+      while (true) {
+        var result = new FileInfo(name + ".$$$");
+        name = result.FullName;
+        if (result.Exists)
+          continue;
+
+        try {
+          var fileHandle = result.Open(FileMode.CreateNew, FileAccess.Write);
+          fileHandle.Close();
+          result.Refresh();
+          return result;
+        } catch (IOException e) when (e.HResult == 0x80070050) {
+          ; // possibly another process created the file already
+        }
       }
-      return result;
     }
-
-
 
     private static string _GenerateKey(FileInfo file) => file.FullName;
 
@@ -385,10 +488,16 @@ namespace DupMerge {
       var result = new StringBuilder();
       result.Append(file.Length);
       result.Append(':');
-      if (file.Length > 0) {
-        foreach (var @byte in file.ComputeSHA512Hash())
-          result.Append(@byte.ToString("X2"));
-      }
+      if (file.Length <= 0)
+        return result.ToString();
+
+      byte[] hash;
+      using (var provider = new SHA512CryptoServiceProvider())
+      using (var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+        hash = provider.ComputeHash(stream);
+
+      foreach (var @byte in hash)
+        result.Append(@byte.ToString("X2"));
 
       return result.ToString();
     }
