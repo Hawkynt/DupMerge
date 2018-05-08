@@ -6,6 +6,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+// TODO: min and max size
+// FIXME: can not read source file
 
 namespace DupMerge {
   class Program {
@@ -221,7 +223,15 @@ namespace DupMerge {
       var checksum = knownWithThisLength.GetOrAdd(myKey, _ => new Lazy<string>(() => _CalculateChecksum(item)));
 
       var isHardLink = false;
-      var hardlinks = item.GetHardLinkTargets();
+      IEnumerable<FileInfo> hardlinks;
+      try {
+        hardlinks = item.GetHardLinkTargets();
+      } catch (Exception e) {
+        _RemoveChecksumEntry(item, knownWithThisLength);
+        Console.WriteLine($"[Error] Could not enumerate HardLinks {item.FullName}: {e.Message}");
+        return;
+      }
+
       foreach (var target in hardlinks) {
         isHardLink = true;
         knownWithThisLength.TryAdd(target.FullName, checksum);
@@ -232,7 +242,15 @@ namespace DupMerge {
         return;
       }
 
-      var symlink = item.GetSymbolicLinkTarget();
+      string symlink;
+      try {
+        symlink = item.GetSymbolicLinkTarget();
+      } catch (Exception e) {
+        _RemoveChecksumEntry(item, knownWithThisLength);
+        Console.WriteLine($"[Error] Could not enumerate SymLink {item.FullName}: {e.Message}");
+        return;
+      }
+
       if (symlink != null) {
         knownWithThisLength.TryAdd(symlink, checksum);
         _HandleExistingSymbolicLink(item, configuration, knownWithThisLength);
