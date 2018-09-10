@@ -833,6 +833,8 @@ namespace DupMerge {
           Console.WriteLine($"[Error] Directory {arg} not found - Aborting!");
           return (int)ExitCode.DirectoryNotFound;
         }
+
+        directories.Add(directory);
       }
 
       // add current directory if none passed
