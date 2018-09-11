@@ -7,6 +7,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using Libraries;
 
 namespace DupMerge {
   class Program {
@@ -444,6 +445,7 @@ namespace DupMerge {
           if (Interlocked.Decrement(ref state[0]) == 0) {
             // signal another thread to continue exiting
             waiter.Set();
+            Console.WriteLine($"Ending Thread #{Thread.CurrentThread.ManagedThreadId}");
             return;
           }
 
@@ -485,7 +487,11 @@ namespace DupMerge {
       // preventing othre threads from processing files with the same size
       // avoiding a race condition where all known links to a file are removed at once, thus loosing data completely 
       lock (knownWithThisLength)
+        try {
           _HandleFileWithGivenSize(item, configuration, knownWithThisLength);
+        } catch (Exception e) {
+          Console.WriteLine($"[Error] Could not process file {item.FullName}: {e.Message}");
+        }
     }
 
     /// <summary>
@@ -539,60 +545,70 @@ namespace DupMerge {
       }
 
       // find matching file in seen list and try to hard or symlink
-      var sameFile =
-        knownWithThisLength.Where(kvp => kvp.Key != myKey)
-          .Where(kvp => kvp.Value.Equals(checksum))
-          .Select(kvp => kvp.Key)
-          .FirstOrDefault()
-          ;
+      var sameFiles =
+        knownWithThisLength
+        .Where(kvp => kvp.Key != myKey)
+        .Where(kvp => kvp.Value.Equals(checksum))
+        .Select(kvp => kvp.Key)
+        ;
 
-      // no other file similar enough - just move on to next file
-      if (sameFile == null)
-        return;
+      foreach (var sameFile in sameFiles) {
+        var temporaryFile = _CreateTemporaryFileInSameDirectory(item);
+        temporaryFile.Delete();
 
-      var temporaryFile = _CreateTemporaryFileInSameDirectory(item);
-      temporaryFile.Delete();
+        var isSymlink = false;
 
-      var isSymlink = false;
-
-      try {
-        temporaryFile.CreateHardLinkFrom(sameFile);
-      } catch (Exception e1) {
-        if (configuration.AlsoTrySymbolicLinks) {
-          isSymlink = true;
-          try {
-            temporaryFile.CreateSymbolicLinkFrom(sameFile);
-          } catch (Exception e2) {
-            Console.WriteLine($"[Warning] Could not Symlink {item.FullName}: {e2.Message}");
-            return;
+        try {
+          temporaryFile.CreateHardLinkFrom(sameFile);
+        } catch (Exception e1) {
+          if (configuration.AlsoTrySymbolicLinks) {
+            isSymlink = true;
+            try {
+              temporaryFile.CreateSymbolicLinkFrom(sameFile);
+            } catch (Exception e2) {
+              Console.WriteLine(
+                $"[Warning] Could not Symlink {item.FullName}({FilesizeFormatter.FormatUnit(item.Length, true)}) --> {sameFile}: {e2.Message}");
+              continue;
+            }
+          } else {
+            Console.WriteLine(
+              $"[Warning] Could not Hardlink {item.FullName}({FilesizeFormatter.FormatUnit(item.Length, true)}) --> {sameFile}: {e1.Message}");
+            continue;
           }
-        } else {
-          Console.WriteLine($"[Warning] Could not Hardlink {item.FullName}: {e1.Message}");
-          return;
         }
+
+        var isAlreadyDeleted = false;
+
+        try {
+          item.Attributes &= ~FileAttributes.ReadOnly;
+          item.Delete();
+          isAlreadyDeleted = true;
+          //Microsoft.VisualBasic.FileSystem.Rename(temporaryFile.FullName, item.Name);
+          File.Move(temporaryFile.FullName, item.FullName);
+        } catch {
+          if (isAlreadyDeleted) {
+
+            // undo file deletion
+            temporaryFile.CopyTo(item.FullName, true);
+          } else {
+
+            // undo temp file creation
+            temporaryFile.Delete();
+          }
+          throw;
+        }
+
+        if (isSymlink) {
+          if (configuration.SetReadOnlyAttributeOnNewSymbolicLinks)
+            item.Attributes |= FileAttributes.ReadOnly;
+        } else {
+          if (configuration.SetReadOnlyAttributeOnNewHardLinks)
+            item.Attributes |= FileAttributes.ReadOnly;
+        }
+
+        Console.WriteLine($"[Info] Created {(isSymlink ? "Symlink" : "Hardlink")} for {item.FullName}({FilesizeFormatter.FormatUnit(item.Length, true)}) --> {sameFile}");
+        return;
       }
-
-      var isAlreadyDeleted = false;
-
-      try {
-        item.Delete();
-        isAlreadyDeleted = true;
-        Microsoft.VisualBasic.FileIO.FileSystem.RenameFile(temporaryFile.FullName, item.Name);
-      } catch when (isAlreadyDeleted) {
-        // undo file deletion
-        temporaryFile.CopyTo(item.FullName, true);
-        throw;
-      }
-
-      if (isSymlink) {
-        if (configuration.SetReadOnlyAttributeOnNewSymbolicLinks)
-          item.Attributes |= FileAttributes.ReadOnly;
-      } else {
-        if (configuration.SetReadOnlyAttributeOnNewHardLinks)
-          item.Attributes |= FileAttributes.ReadOnly;
-      }
-
-      Console.WriteLine($"[Info] Created {(isSymlink ? "Symlink" : "Hardlink")} for {item.FullName} --> {sameFile}");
     }
 
     /// <summary>
@@ -723,7 +739,8 @@ namespace DupMerge {
         item.Delete();
 
         executionState = CRASH_DURING_RENAME;
-        Microsoft.VisualBasic.FileIO.FileSystem.RenameFile(temporaryName.FullName, item.Name);
+        //Microsoft.VisualBasic.FileSystem.Rename(temporaryName.FullName, item.Name);
+        File.Move(temporaryName.FullName, item.FullName);
 
         executionState = CRASH_DURING_ATTRIBUTION;
         item.Attributes = attributes & (FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden);
