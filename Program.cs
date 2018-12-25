@@ -583,7 +583,6 @@ namespace DupMerge {
           item.Attributes &= ~FileAttributes.ReadOnly;
           item.Delete();
           isAlreadyDeleted = true;
-          //Microsoft.VisualBasic.FileSystem.Rename(temporaryFile.FullName, item.Name);
           File.Move(temporaryFile.FullName, item.FullName);
         } catch {
           if (isAlreadyDeleted) {
@@ -641,7 +640,7 @@ namespace DupMerge {
       }
 
       if (configuration.SetReadOnlyAttributeOnExistingSymbolicLinks && ((item.Attributes & FileAttributes.ReadOnly) != FileAttributes.ReadOnly)) {
-        Console.WriteLine($"[Info] Setting read-only attribute on {item.FullName}");
+        Console.WriteLine($"[Info] Setting read-only attribute on Symlink {item.FullName}");
         item.Attributes |= FileAttributes.ReadOnly;
         return;
       }
@@ -679,7 +678,7 @@ namespace DupMerge {
       }
 
       if (configuration.SetReadOnlyAttributeOnExistingHardLinks && ((item.Attributes & FileAttributes.ReadOnly) != FileAttributes.ReadOnly)) {
-        Console.WriteLine($"[Info] Setting read-only attribute on {item.FullName}");
+        Console.WriteLine($"[Info] Setting read-only attribute on Hardlink {item.FullName}");
         item.Attributes |= FileAttributes.ReadOnly;
         return;
       }
