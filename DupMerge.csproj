@@ -57,6 +57,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>System.IO.LinkExtensions.tt</DependentUpon>
     </Compile>
+    <Compile Include="..\..\Framework\System.StringExtensions.cs">
+      <Link>Framework\System.StringExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\..\Libraries\FilesizeFormatter.cs">
       <Link>Classes\FilesizeFormatter.cs</Link>
     </Compile>

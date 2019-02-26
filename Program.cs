@@ -295,6 +295,48 @@ namespace DupMerge {
         }
 
         switch (name) {
+          case "/?":
+          case "-H":
+          case "--help": {
+            Console.WriteLine(@"
+DupMerge (c)2018-2019 Hawkynt
+Creates or removes links to duplicate files.
+Usage: DupMerge [<options>] [<directories>]
+   Options:
+    -t <n>, --threads <n>
+        Specifies the number of threads to use for crawling - defaults to number of CPU cores or 8 - whatever is less
+    -m <n>, --minimum <n>
+        Specifies the minimum file size to process, defaults to 1
+    -M <n>, --maximum <n>
+        Specifies the maximum file size to process
+
+    -s    , --allow-symlink
+        Allows creating symbolic links in case a hardlink could not be created
+    
+    -Dhl  , --delete-hardlinks
+        Deletes all hard links
+    -Dsl  , --delete-symlinks, --delete-symboliclinks
+        Deletes all symbolic links
+    -D    , --delete
+        Sames as -Dhl -Dsl
+
+    -Rhl  , --remove-hardlinks
+        Removes hard links and replaces them with a copy of the linked file
+    -Rsl  , --remove-symlinks, --remove-symboliclinks
+        Removes symbolic links and replaces them with a copy of the linked file
+    -R    , --remove
+        Same as -Rhl -Rsl
+
+    -sro  , --set-readonly
+        Sets read-only attribute on newly created sym/hard-links
+    -uro  , --update-readonly
+        Sets read-only attribute to existing sym/hard-links
+    -ro   , --readonly
+        Same as -sro -uro
+            ");
+            Environment.Exit(0);
+            break;
+          }
           case "-t":
           case "--threads":
           {
@@ -835,7 +877,7 @@ namespace DupMerge {
 
       foreach (var arg in args) {
         if (maybeSwitch) {
-          if (arg.StartsWith("-")) {
+          if (arg.StartsWithAny("-","/")) {
             switches.Add(arg);
             continue;
           }
