@@ -19,7 +19,29 @@ namespace DupMerge {
       DirectoryNotFound = -1,
     }
 
+    private class LinkStats {
+      private long _seen;
+      private long _created;
+      private long _deleted;
+      private long _removed;
+
+      public long Seen => this._seen;
+      public long Created => this._created;
+      public long Deleted => this._deleted;
+      public long Removed => this._removed;
+
+      public void IncreaseSeen(long count = 1) => Interlocked.Add(ref this._seen, count);
+      public void IncreaseCreated(long count = 1) => Interlocked.Add(ref this._created, count);
+      public void IncreaseDeleted(long count = 1) => Interlocked.Add(ref this._deleted, count);
+      public void IncreaseRemoved(long count = 1) => Interlocked.Add(ref this._removed, count);
+
+    }
+
     private class Configuration {
+      private long _bytesTotal;
+      private long _fileCount;
+      private long _folderCount;
+
       public long MinimumFileSizeInBytes { get; set; } = 1;
       public long MaximumFileSizeInBytes { get; set; } = long.MaxValue;
       public bool AlsoTrySymbolicLinks { get; set; }
@@ -33,6 +55,16 @@ namespace DupMerge {
       public bool DeleteSymbolicLinkedFiles { get; set; }
       public int MaximumCrawlerThreads { get; set; } = Math.Min(Environment.ProcessorCount, 8);
       public bool ShowInfoOnly { get; set; }
+      public LinkStats HardLinkStats { get; }=new LinkStats();
+      public LinkStats SymbolicLinkStats { get; } = new LinkStats();
+      public long FileCount => this._fileCount;
+      public long FolderCount => this._folderCount;
+      public long BytesTotal => this._bytesTotal;
+
+      public void IncrementFiles(long count = 1) => Interlocked.Add(ref this._fileCount, count);
+      public void IncrementFolders(long count=1) => Interlocked.Add(ref this._folderCount, count);
+      public void IncrementBytes(long count ) => Interlocked.Add(ref this._bytesTotal, count);
+
     }
 
     private class FileEntry {
@@ -304,6 +336,8 @@ DupMerge (c)2018-2019 Hawkynt
 Creates or removes links to duplicate files.
 Usage: DupMerge [<options>] [<directories>]
    Options:
+    -v    , --info
+        Shows info only
     -t <n>, --threads <n>
         Specifies the number of threads to use for crawling - defaults to number of CPU cores or 8 - whatever is less
     -m <n>, --minimum <n>
@@ -336,6 +370,11 @@ Usage: DupMerge [<options>] [<directories>]
         Same as -sro -uro
             ");
             Environment.Exit(0);
+            break;
+          }
+          case "-v":
+          case "--info": {
+            configuration.ShowInfoOnly = true;
             break;
           }
           case "-t":
@@ -434,10 +473,11 @@ Usage: DupMerge [<options>] [<directories>]
     /// </summary>
     /// <param name="directories">The directories.</param>
     /// <param name="configuration">The configuration.</param>
-    private static void _ProcessFolders(IEnumerable<DirectoryInfo> directories, Configuration configuration) {
+    private static void _ProcessFolders(IList<DirectoryInfo> directories, Configuration configuration) {
       var seenFiles = new ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>>();
       var stack = new ConcurrentStack<DirectoryInfo>();
       stack.PushRange(directories);
+      configuration.IncrementFolders(directories.Count);
       var threads = new Thread[Math.Max(1, configuration.MaximumCrawlerThreads)];
 
       using (var autoresetEvent = new AutoResetEvent(false)) {
@@ -452,15 +492,6 @@ Usage: DupMerge [<options>] [<directories>]
           thread.Join();
       }
     }
-
-    /// <summary>
-    /// Processes a single folder with the given configuration.
-    /// </summary>
-    /// <param name="directory">The directory.</param>
-    /// <param name="configuration">The configuration.</param>
-    private static void _ProcessFolder(DirectoryInfo directory, Configuration configuration)
-          => _ProcessFolders(new[] { directory }, configuration)
-          ;
 
     /// <summary>
     /// A wrapper for the worker thread - simply unwraps the state object.
@@ -481,9 +512,7 @@ Usage: DupMerge [<options>] [<directories>]
     /// <param name="state">The state.</param>
     private static void _ThreadWorker(ConcurrentStack<DirectoryInfo> stack, Configuration configuration, ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>> seenItems, AutoResetEvent waiter, int[] state) {
       while (true) {
-        DirectoryInfo current;
-
-        if (!stack.TryPop(out current)) {
+        if (!stack.TryPop(out var current)) {
           // when stack is empty, signal we're lazy and if all other threads are also, end thread
           if (Interlocked.Decrement(ref state[0]) == 0) {
             // signal another thread to continue exiting
@@ -500,6 +529,7 @@ Usage: DupMerge [<options>] [<directories>]
         // push directories and wake up any sleeping threads
         foreach (var directory in current.EnumerateDirectories()) {
           stack.Push(directory);
+          configuration.IncrementFolders();
 
           // notify other threads which may be waiting for work
           waiter.Set();
@@ -521,7 +551,10 @@ Usage: DupMerge [<options>] [<directories>]
           Configuration configuration,
           ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>> seenItems) {
 
+      configuration.IncrementFiles();
       var length = item.Length;
+      configuration.IncrementBytes(length);
+
       if (length < configuration.MinimumFileSizeInBytes || length > configuration.MaximumFileSizeInBytes)
         return;
 
@@ -567,6 +600,10 @@ Usage: DupMerge [<options>] [<directories>]
       }
 
       if (isHardLink) {
+        if (configuration.ShowInfoOnly)
+          return;
+
+        configuration.HardLinkStats.IncreaseSeen();
         _HandleExistingHardLink(item, configuration, knownWithThisLength);
         return;
       }
@@ -583,9 +620,16 @@ Usage: DupMerge [<options>] [<directories>]
 
       if (symlink != null) {
         knownWithThisLength.TryAdd(symlink, new FileEntry(new FileInfo(symlink)));
+        if (configuration.ShowInfoOnly)
+          return;
+
+        configuration.SymbolicLinkStats.IncreaseSeen();
         _HandleExistingSymbolicLink(item, configuration, knownWithThisLength);
         return;
       }
+
+      if (configuration.ShowInfoOnly)
+        return;
 
       // find matching file in seen list and try to hard or symlink
       var sameFiles =
@@ -641,9 +685,11 @@ Usage: DupMerge [<options>] [<directories>]
         }
 
         if (isSymlink) {
+          configuration.SymbolicLinkStats.IncreaseCreated();
           if (configuration.SetReadOnlyAttributeOnNewSymbolicLinks)
             item.Attributes |= FileAttributes.ReadOnly;
         } else {
+          configuration.HardLinkStats.IncreaseCreated();
           if (configuration.SetReadOnlyAttributeOnNewHardLinks)
             item.Attributes |= FileAttributes.ReadOnly;
         }
@@ -667,6 +713,7 @@ Usage: DupMerge [<options>] [<directories>]
       if (configuration.DeleteSymbolicLinkedFiles) {
         _RemoveFileEntry(item, knownWithThisLength);
         _DeleteLink(item);
+        configuration.SymbolicLinkStats.IncreaseDeleted();
         Console.WriteLine($"[Info] Deleted Symlink {item.FullName}");
         return;
       }
@@ -675,6 +722,7 @@ Usage: DupMerge [<options>] [<directories>]
         _RemoveFileEntry(item, knownWithThisLength);
         try {
           _ReplaceFileLinkWithFileContent(item);
+          configuration.SymbolicLinkStats.IncreaseRemoved();
           Console.WriteLine($"[Info] Removed Symlink {item.FullName}");
         } catch (Exception e) {
           Console.WriteLine($"[Error] Could not remove Symlink {item.FullName}: {e.Message}");
@@ -705,6 +753,7 @@ Usage: DupMerge [<options>] [<directories>]
       if (configuration.DeleteHardLinkedFiles) {
         _RemoveFileEntry(item, knownWithThisLength);
         _DeleteLink(item);
+        configuration.HardLinkStats.IncreaseDeleted();
         Console.WriteLine($"[Info] Deleted Hardlink {item.FullName}");
         return;
       }
@@ -713,6 +762,7 @@ Usage: DupMerge [<options>] [<directories>]
         _RemoveFileEntry(item, knownWithThisLength);
         try {
           _ReplaceFileLinkWithFileContent(item);
+          configuration.HardLinkStats.IncreaseRemoved();
           Console.WriteLine($"[Info] Removed Hardlink {item.FullName}");
         } catch (Exception e) {
           Console.WriteLine($"[Error] Could not remove Hardlink {item.FullName}: {e.Message}");
@@ -903,6 +953,19 @@ Usage: DupMerge [<options>] [<directories>]
       var configuration = new Configuration();
       _ProcessSwitches(switches, configuration);
       _ProcessFolders(directories, configuration);
+      Console.WriteLine();
+      Console.WriteLine("Statistics");
+      Console.WriteLine();
+      Console.WriteLine( "         HardLinks  SymbolicLinks");
+      Console.WriteLine($"Created  {configuration.HardLinkStats.Created,-9}  {configuration.SymbolicLinkStats.Created,-13}");
+      Console.WriteLine($"Removed  {configuration.HardLinkStats.Removed,-9}  {configuration.SymbolicLinkStats.Removed,-13}");
+      Console.WriteLine($"Deleted  {configuration.HardLinkStats.Deleted,-9}  {configuration.SymbolicLinkStats.Deleted,-13}");
+      Console.WriteLine($"Seen     {configuration.HardLinkStats.Seen,-9}  {configuration.SymbolicLinkStats.Seen,-13}");
+      Console.WriteLine();
+      Console.WriteLine($"Folders Total : {configuration.FolderCount}");
+      Console.WriteLine($"Files Total   : {configuration.FileCount}");
+      Console.WriteLine($"Bytes Total   : {configuration.BytesTotal} ({FilesizeFormatter.FormatIEC(configuration.BytesTotal)})");
+
 
 #if DEBUG
       Console.WriteLine("READY.");
