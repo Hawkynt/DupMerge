@@ -600,10 +600,10 @@ Usage: DupMerge [<options>] [<directories>]
       }
 
       if (isHardLink) {
+        configuration.HardLinkStats.IncreaseSeen();
         if (configuration.ShowInfoOnly)
           return;
 
-        configuration.HardLinkStats.IncreaseSeen();
         _HandleExistingHardLink(item, configuration, knownWithThisLength);
         return;
       }
@@ -620,10 +620,10 @@ Usage: DupMerge [<options>] [<directories>]
 
       if (symlink != null) {
         knownWithThisLength.TryAdd(symlink, new FileEntry(new FileInfo(symlink)));
+        configuration.SymbolicLinkStats.IncreaseSeen();
         if (configuration.ShowInfoOnly)
           return;
 
-        configuration.SymbolicLinkStats.IncreaseSeen();
         _HandleExistingSymbolicLink(item, configuration, knownWithThisLength);
         return;
       }
@@ -957,10 +957,10 @@ Usage: DupMerge [<options>] [<directories>]
       Console.WriteLine("Statistics");
       Console.WriteLine();
       Console.WriteLine( "         HardLinks  SymbolicLinks");
-      Console.WriteLine($"Created  {configuration.HardLinkStats.Created,-9}  {configuration.SymbolicLinkStats.Created,-13}");
-      Console.WriteLine($"Removed  {configuration.HardLinkStats.Removed,-9}  {configuration.SymbolicLinkStats.Removed,-13}");
-      Console.WriteLine($"Deleted  {configuration.HardLinkStats.Deleted,-9}  {configuration.SymbolicLinkStats.Deleted,-13}");
-      Console.WriteLine($"Seen     {configuration.HardLinkStats.Seen,-9}  {configuration.SymbolicLinkStats.Seen,-13}");
+      Console.WriteLine($"Created  {configuration.HardLinkStats.Created,9}  {configuration.SymbolicLinkStats.Created,13}");
+      Console.WriteLine($"Removed  {configuration.HardLinkStats.Removed,9}  {configuration.SymbolicLinkStats.Removed,13}");
+      Console.WriteLine($"Deleted  {configuration.HardLinkStats.Deleted,9}  {configuration.SymbolicLinkStats.Deleted,13}");
+      Console.WriteLine($"Seen     {configuration.HardLinkStats.Seen,9}  {configuration.SymbolicLinkStats.Seen,13}");
       Console.WriteLine();
       Console.WriteLine($"Folders Total : {configuration.FolderCount}");
       Console.WriteLine($"Files Total   : {configuration.FileCount}");
