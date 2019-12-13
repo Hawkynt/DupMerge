@@ -957,14 +957,14 @@ Usage: DupMerge [<options>] [<directories>]
       Console.WriteLine("Statistics");
       Console.WriteLine();
       Console.WriteLine( "         HardLinks  SymbolicLinks");
-      Console.WriteLine($"Created  {configuration.HardLinkStats.Created,9}  {configuration.SymbolicLinkStats.Created,13}");
-      Console.WriteLine($"Removed  {configuration.HardLinkStats.Removed,9}  {configuration.SymbolicLinkStats.Removed,13}");
-      Console.WriteLine($"Deleted  {configuration.HardLinkStats.Deleted,9}  {configuration.SymbolicLinkStats.Deleted,13}");
-      Console.WriteLine($"Seen     {configuration.HardLinkStats.Seen,9}  {configuration.SymbolicLinkStats.Seen,13}");
+      Console.WriteLine($"Created  {configuration.HardLinkStats.Created,9:N0}  {configuration.SymbolicLinkStats.Created,13:N0}");
+      Console.WriteLine($"Removed  {configuration.HardLinkStats.Removed,9:N0}  {configuration.SymbolicLinkStats.Removed,13:N0}");
+      Console.WriteLine($"Deleted  {configuration.HardLinkStats.Deleted,9:N0}  {configuration.SymbolicLinkStats.Deleted,13:N0}");
+      Console.WriteLine($"Seen     {configuration.HardLinkStats.Seen,9:N0}  {configuration.SymbolicLinkStats.Seen,13:N0}");
       Console.WriteLine();
-      Console.WriteLine($"Folders Total : {configuration.FolderCount}");
-      Console.WriteLine($"Files Total   : {configuration.FileCount}");
-      Console.WriteLine($"Bytes Total   : {configuration.BytesTotal} ({FilesizeFormatter.FormatIEC(configuration.BytesTotal)})");
+      Console.WriteLine($"Folders Total : {configuration.FolderCount:N0}");
+      Console.WriteLine($"Files Total   : {configuration.FileCount:N0}");
+      Console.WriteLine($"Bytes Total   : {configuration.BytesTotal:N0} ({FilesizeFormatter.FormatIEC(configuration.BytesTotal,"N1")})");
 
 
 #if DEBUG
