@@ -259,11 +259,12 @@ namespace Classes {
     /// </summary>
     /// <param name="directories">The directories.</param>
     /// <param name="configuration">The configuration.</param>
-    public static void ProcessFolders(IList<DirectoryInfo> directories, Configuration configuration) {
+    /// <param name="stats">The statistics.</param>
+    public static void ProcessFolders(IList<DirectoryInfo> directories, Configuration configuration,RuntimeStats stats) {
       var seenFiles = new ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>>();
       var stack = new ConcurrentStack<DirectoryInfo>();
       stack.PushRange(directories);
-      configuration.IncrementFolders(directories.Count);
+      stats.IncrementFolders(directories.Count);
       var threads = new Thread[Math.Max(1, configuration.MaximumCrawlerThreads)];
 
       using (var autoresetEvent = new AutoResetEvent(false)) {
@@ -271,7 +272,7 @@ namespace Classes {
 
         for (var i = 0; i < threads.Length; ++i) {
           threads[i] = new Thread(_ThreadWorker);
-          threads[i].Start(Tuple.Create(stack, configuration, seenFiles, autoresetEvent, runningWorkers));
+          threads[i].Start(Tuple.Create(stack, configuration, stats,seenFiles, autoresetEvent, runningWorkers));
         }
 
         foreach (var thread in threads)
@@ -284,8 +285,8 @@ namespace Classes {
     /// </summary>
     /// <param name="state">The state.</param>
     private static void _ThreadWorker(object state) {
-      var t = (Tuple<ConcurrentStack<DirectoryInfo>, Configuration, ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>>, AutoResetEvent, int[]>) state;
-      _ThreadWorker(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5);
+      var t = (Tuple<ConcurrentStack<DirectoryInfo>, Configuration,RuntimeStats,  ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>>, AutoResetEvent, int[]>) state;
+      _ThreadWorker(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5,t.Item6);
     }
 
     /// <summary>
@@ -296,7 +297,7 @@ namespace Classes {
     /// <param name="seenItems">The seen items.</param>
     /// <param name="waiter">The waiter.</param>
     /// <param name="state">The state.</param>
-    private static void _ThreadWorker(ConcurrentStack<DirectoryInfo> stack, Configuration configuration, ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>> seenItems, AutoResetEvent waiter, int[] state) {
+    private static void _ThreadWorker(ConcurrentStack<DirectoryInfo> stack, Configuration configuration,RuntimeStats stats,  ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>> seenItems, AutoResetEvent waiter, int[] state) {
       while (true) {
         if (!stack.TryPop(out var current)) {
           // when stack is empty, signal we're lazy and if all other threads are also, end thread
@@ -315,14 +316,14 @@ namespace Classes {
         // push directories and wake up any sleeping threads
         foreach (var directory in current.EnumerateDirectories()) {
           stack.Push(directory);
-          configuration.IncrementFolders();
+          stats.IncrementFolders();
 
           // notify other threads which may be waiting for work
           waiter.Set();
         }
 
         foreach (var item in current.EnumerateFiles())
-          _HandleFile(item, configuration, seenItems);
+          _HandleFile(item, configuration, stats, seenItems);
       }
     }
 
@@ -331,15 +332,17 @@ namespace Classes {
     /// </summary>
     /// <param name="item">The item.</param>
     /// <param name="configuration">The configuration.</param>
+    /// <param name="stats">The statistics.</param>
     /// <param name="seenItems">The seen items.</param>
     private static void _HandleFile(
       FileInfo item,
       Configuration configuration,
+      RuntimeStats stats,
       ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>> seenItems) {
 
-      configuration.IncrementFiles();
+      stats.IncrementFiles();
       var length = item.Length;
-      configuration.IncrementBytes(length);
+      stats.IncrementBytes(length);
 
       if (length < configuration.MinimumFileSizeInBytes || length > configuration.MaximumFileSizeInBytes)
         return;
@@ -350,7 +353,7 @@ namespace Classes {
       // avoiding a race condition where all known links to a file are removed at once, thus loosing data completely 
       lock (knownWithThisLength)
         try {
-          _HandleFileWithGivenSize(item, configuration, knownWithThisLength);
+          _HandleFileWithGivenSize(item, configuration,stats, knownWithThisLength);
         } catch (Exception e) {
           Console.WriteLine($"[Error] Could not process file {item.FullName}: {e.Message}");
         }
@@ -361,10 +364,12 @@ namespace Classes {
     /// </summary>
     /// <param name="item">The item.</param>
     /// <param name="configuration">The configuration.</param>
+    /// <param name="stats">The statistics.</param>
     /// <param name="knownWithThisLength">Length of the known with this.</param>
     private static void _HandleFileWithGivenSize(
       FileInfo item,
       Configuration configuration,
+      RuntimeStats stats,
       ConcurrentDictionary<string, FileEntry> knownWithThisLength) {
       var myKey = _GenerateKey(item);
       var checksum = knownWithThisLength.GetOrAdd(myKey, new FileEntry(item));
@@ -386,11 +391,11 @@ namespace Classes {
       }
 
       if (isHardLink) {
-        configuration.HardLinkStats.IncreaseSeen();
+        stats.HardLinkStats.IncreaseSeen();
         if (configuration.ShowInfoOnly)
           return;
 
-        _HandleExistingHardLink(item, configuration, knownWithThisLength);
+        _HandleExistingHardLink(item, configuration,stats, knownWithThisLength);
         return;
       }
 
@@ -406,11 +411,11 @@ namespace Classes {
 
       if (symlink != null) {
         knownWithThisLength.TryAdd(symlink, new FileEntry(new FileInfo(symlink)));
-        configuration.SymbolicLinkStats.IncreaseSeen();
+        stats.SymbolicLinkStats.IncreaseSeen();
         if (configuration.ShowInfoOnly)
           return;
 
-        _HandleExistingSymbolicLink(item, configuration, knownWithThisLength);
+        _HandleExistingSymbolicLink(item, configuration, stats,knownWithThisLength);
         return;
       }
 
@@ -472,11 +477,11 @@ namespace Classes {
         }
 
         if (isSymlink) {
-          configuration.SymbolicLinkStats.IncreaseCreated();
+          stats.SymbolicLinkStats.IncreaseCreated();
           if (configuration.SetReadOnlyAttributeOnNewSymbolicLinks)
             item.Attributes |= FileAttributes.ReadOnly;
         } else {
-          configuration.HardLinkStats.IncreaseCreated();
+          stats.HardLinkStats.IncreaseCreated();
           if (configuration.SetReadOnlyAttributeOnNewHardLinks)
             item.Attributes |= FileAttributes.ReadOnly;
         }
@@ -491,16 +496,18 @@ namespace Classes {
     /// </summary>
     /// <param name="item">The item.</param>
     /// <param name="configuration">The configuration.</param>
+    /// <param name="stats">The statistics.</param>
     /// <param name="knownWithThisLength">Length of the known with this.</param>
     private static void _HandleExistingSymbolicLink(
       FileInfo item,
       Configuration configuration,
+      RuntimeStats stats,
       ConcurrentDictionary<string, FileEntry> knownWithThisLength
     ) {
       if (configuration.DeleteSymbolicLinkedFiles) {
         _RemoveFileEntry(item, knownWithThisLength);
         _DeleteLink(item);
-        configuration.SymbolicLinkStats.IncreaseDeleted();
+        stats.SymbolicLinkStats.IncreaseDeleted();
         Console.WriteLine($"[Info] Deleted Symlink {item.FullName}");
         return;
       }
@@ -509,7 +516,7 @@ namespace Classes {
         _RemoveFileEntry(item, knownWithThisLength);
         try {
           _ReplaceFileLinkWithFileContent(item);
-          configuration.SymbolicLinkStats.IncreaseRemoved();
+          stats.SymbolicLinkStats.IncreaseRemoved();
           Console.WriteLine($"[Info] Removed Symlink {item.FullName}");
         } catch (Exception e) {
           Console.WriteLine($"[Error] Could not remove Symlink {item.FullName}: {e.Message}");
@@ -532,16 +539,18 @@ namespace Classes {
     /// </summary>
     /// <param name="item">The item.</param>
     /// <param name="configuration">The configuration.</param>
+    /// <param name="stats">The statistics.</param>
     /// <param name="knownWithThisLength">Length of the known with this.</param>
     private static void _HandleExistingHardLink(
       FileInfo item,
       Configuration configuration,
+      RuntimeStats stats,
       ConcurrentDictionary<string, FileEntry> knownWithThisLength
     ) {
       if (configuration.DeleteHardLinkedFiles) {
         _RemoveFileEntry(item, knownWithThisLength);
         _DeleteLink(item);
-        configuration.HardLinkStats.IncreaseDeleted();
+        stats.HardLinkStats.IncreaseDeleted();
         Console.WriteLine($"[Info] Deleted Hardlink {item.FullName}");
         return;
       }
@@ -550,7 +559,7 @@ namespace Classes {
         _RemoveFileEntry(item, knownWithThisLength);
         try {
           _ReplaceFileLinkWithFileContent(item);
-          configuration.HardLinkStats.IncreaseRemoved();
+          stats.HardLinkStats.IncreaseRemoved();
           Console.WriteLine($"[Info] Removed Hardlink {item.FullName}");
         } catch (Exception e) {
           Console.WriteLine($"[Error] Could not remove Hardlink {item.FullName}: {e.Message}");
