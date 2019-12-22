@@ -67,6 +67,10 @@
     <Compile Include="..\..\Libraries\FilesizeFormatter.cs">
       <Link>Classes\FilesizeFormatter.cs</Link>
     </Compile>
+    <Compile Include="Classes\CLI.cs" />
+    <Compile Include="Classes\Configuration.cs" />
+    <Compile Include="Classes\LinkStats.cs" />
+    <Compile Include="Classes\DuplicateFileMerger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
