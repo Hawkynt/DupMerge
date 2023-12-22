@@ -349,7 +349,7 @@ namespace Classes {
 
       var knownWithThisLength = seenItems.GetOrAdd(length, _ => new ConcurrentDictionary<string, FileEntry>());
 
-      // preventing othre threads from processing files with the same size
+      // preventing other threads from processing files with the same size
       // avoiding a race condition where all known links to a file are removed at once, thus loosing data completely 
       lock (knownWithThisLength)
         try {
@@ -437,12 +437,12 @@ namespace Classes {
         var isSymlink = false;
 
         try {
-          LinkExtensions.CreateHardLinkFrom((FileInfo) temporaryFile, (string) sameFile);
+          temporaryFile.CreateHardLinkFrom(sameFile);
         } catch (Exception e1) {
           if (configuration.AlsoTrySymbolicLinks) {
             isSymlink = true;
             try {
-              LinkExtensions.CreateSymbolicLinkFrom((FileInfo) temporaryFile, (string) sameFile);
+              temporaryFile.CreateSymbolicLinkFrom(sameFile);
             } catch (Exception e2) {
               Console.WriteLine(
                 $"[Warning] Could not Symlink {item.FullName}({FilesizeFormatter.FormatUnit(item.Length, true)}) --> {sameFile}: {e2.Message}");

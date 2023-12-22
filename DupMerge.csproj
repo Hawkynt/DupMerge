@@ -13,60 +13,38 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
+    <langversion>default</langversion>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\..\Framework\System.Collections.Concurrent.ConcurrentStackExtensions.cs">
-      <Link>Framework\System.Collections.Concurrent.ConcurrentStackExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Framework\System.IO.FileInfoExtensions.cs">
-      <Link>Framework\System.IO.FileInfoExtensions.cs</Link>
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>System.IO.FileInfoExtensions.tt</DependentUpon>
-    </Compile>
-    <Compile Include="..\..\Framework\System.IO.LinkExtensions.cs">
-      <Link>Framework\System.IO.LinkExtensions.cs</Link>
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>System.IO.LinkExtensions.tt</DependentUpon>
-    </Compile>
-    <Compile Include="..\..\Framework\System.StringExtensions.cs">
-      <Link>Framework\System.StringExtensions.cs</Link>
-    </Compile>
+    <Reference Include="System.Transactions" />
+  
     <Compile Include="..\..\Libraries\FilesizeFormatter.cs">
       <Link>Classes\FilesizeFormatter.cs</Link>
     </Compile>
+  
     <Compile Include="Classes\CLI.cs" />
     <Compile Include="Classes\Configuration.cs" />
     <Compile Include="Classes\LinkStats.cs" />
@@ -74,25 +52,99 @@
     <Compile Include="Classes\RuntimeStats.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="App.config" />
     <None Include="app.manifest" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\..\Framework\System.IO.FileInfoExtensions.tt">
-      <Link>Framework\System.IO.FileInfoExtensions.tt</Link>
+
+    <!-- From Backports -->
+    <Compile Include="..\..\\Framework\Backports\System\Diagnostics\CodeAnalysis\NotNullAttribute.cs">
+      <Link>Framework\NotNullAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\..\\Framework\Backports\System\Diagnostics\CodeAnalysis\DoesNotReturnAttribute.cs">
+      <Link>Framework\DoesNotReturnAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\..\\Framework\Backports\System\Runtime\CompilerServices\CallerArgumentExpressionAttribute.cs">
+      <Link>Framework\CallerArgumentExpressionAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\..\\Framework\Backports\System\Range.cs">
+      <Link>Framework\Range.cs</Link>
+    </Compile>
+    <Compile Include="..\..\\Framework\Backports\System\Index.cs">
+      <Link>Framework\Index.cs</Link>
+    </Compile>
+
+    <!-- From Corlib -->
+    <Compile Include="..\..\Framework\Corlib.Extensions\Guard\Against.cs">
+      <Link>Framework\Against.cs</Link>
+    </Compile>
+    
+    <Compile Include="..\..\Framework\Corlib.Extensions\Guard\AlwaysThrow.cs">
+      <Link>Framework\AlwaysThrow.cs</Link>
+    </Compile>
+  
+    <Compile Include="..\..\Framework\Corlib.Extensions\Guard\Against.T4.cs">
+      <Link>Framework\Against.T4.cs</Link>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Against.T4.tt</DependentUpon>
+    </Compile>
+    <Content Include="..\..\Framework\Corlib.Extensions\Guard\Against.T4.tt">
+      <Link>Framework\Against.T4.tt</Link>
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>System.IO.FileInfoExtensions.cs</LastGenOutput>
+      <LastGenOutput>Against.T4.cs</LastGenOutput>
     </Content>
-    <Content Include="..\..\Framework\System.IO.LinkExtensions.tt">
-      <Link>Framework\System.IO.LinkExtensions.tt</Link>
+    
+    <Compile Include="..\..\Framework\Corlib.Extensions\System\Collections\Concurrent\ConcurrentStack.cs">
+      <Link>Framework\ConcurrentStack.cs</Link>
+    </Compile>
+  
+    <Compile Include="..\..\Framework\Corlib.Extensions\System\Collections\Generic\Enumerable.cs">
+      <Link>Framework\Enumerable.cs</Link>
+    </Compile>
+  
+    <Compile Include="..\..\Framework\Corlib.Extensions\System\IO\Path.cs">
+      <Link>Framework\Path.cs</Link>
+    </Compile>
+    
+    <Compile Include="..\..\Framework\Corlib.Extensions\System\IO\FileInfo.cs">
+      <Link>Framework\FileInfo.cs</Link>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FileInfo.tt</DependentUpon>
+    </Compile>
+    <Content Include="..\..\Framework\Corlib.Extensions\System\IO\FileInfo.tt">
+      <Link>Framework\FileInfo.tt</Link>
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>System.IO.LinkExtensions.cs</LastGenOutput>
+      <LastGenOutput>FileInfo.cs</LastGenOutput>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+    
+    <Compile Include="..\..\Framework\Corlib.Extensions\System\IO\Link.cs">
+      <Link>Framework\Link.cs</Link>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>System.IO.Link.tt</DependentUpon>
+    </Compile>
+    <Content Include="..\..\Framework\Corlib.Extensions\System\IO\Link.tt">
+      <Link>Framework\Link.tt</Link>
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Link.cs</LastGenOutput>
+    </Content>
+
+    <Compile Include="..\..\Framework\Corlib.Extensions\System\IO\Stream.cs">
+      <Link>Framework\Stream.cs</Link>
+    </Compile>
+    
+    <Compile Include="..\..\Framework\Corlib.Extensions\System\StaticMethodLocal.cs">
+      <Link>Framework\StaticMethodLocal.cs</Link>
+    </Compile>
+    
+    <Compile Include="..\..\Framework\Corlib.Extensions\System\String.cs">
+      <Link>Framework\String.cs</Link>
+    </Compile>
+    
+    <Compile Include="..\..\Framework\Corlib.Extensions\System\Char.cs">
+      <Link>Framework\Char.cs</Link>
+    </Compile>
+
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -102,5 +154,5 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Import Project="..\..\VersionSpecificSymbols.Common.prop" />
+  <Import Project="..\..\Framework\VersionSpecificSymbols.Common.prop" />
 </Project>
