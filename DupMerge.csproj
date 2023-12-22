@@ -105,6 +105,10 @@
       <Link>Framework\Path.cs</Link>
     </Compile>
     
+    <Compile Include="..\..\Framework\Corlib.Extensions\System\IO\DirectoryInfo.cs">
+      <Link>Framework\DirectoryInfo.cs</Link>
+    </Compile>
+    
     <Compile Include="..\..\Framework\Corlib.Extensions\System\IO\FileInfo.cs">
       <Link>Framework\FileInfo.cs</Link>
       <AutoGen>True</AutoGen>

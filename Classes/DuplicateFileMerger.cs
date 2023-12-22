@@ -314,7 +314,7 @@ namespace Classes {
         }
 
         // push directories and wake up any sleeping threads
-        foreach (var directory in current.EnumerateDirectories()) {
+        foreach (var directory in current.SafelyEnumerateDirectories()) {
           stack.Push(directory);
           stats.IncrementFolders();
 
@@ -322,7 +322,7 @@ namespace Classes {
           waiter.Set();
         }
 
-        foreach (var item in current.EnumerateFiles())
+        foreach (var item in current.SafelyEnumerateFiles())
           _HandleFile(item, configuration, stats, seenItems);
       }
     }
@@ -378,7 +378,7 @@ namespace Classes {
       IEnumerable<FileInfo> hardlinks;
 
       try {
-        hardlinks = item.GetHardLinkTargets();
+        hardlinks = item.GetHardLinkTargets().Where(i=>i.FullName != item.FullName);
       } catch (Exception e) {
         _RemoveFileEntry(item, knownWithThisLength);
         Console.WriteLine($"[Error] Could not enumerate HardLinks {item.FullName}: {e.Message}");
@@ -387,6 +387,7 @@ namespace Classes {
 
       foreach (var target in hardlinks) {
         isHardLink = true;
+        Console.WriteLine($"[Verbose] {item.FullName} > {target.FullName}");
         knownWithThisLength.TryAdd(_GenerateKey(target), new FileEntry(target));
       }
 
