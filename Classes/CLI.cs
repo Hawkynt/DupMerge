@@ -33,7 +33,7 @@ namespace Classes {
           case "-H":
           case "--help": {
               Console.WriteLine(@"
-DupMerge (c)2018-2019 Hawkynt
+DupMerge (c)2018-2024 Hawkynt
 Creates or removes links to duplicate files.
 Usage: DupMerge [<options>] [<directories>]
    Options:
