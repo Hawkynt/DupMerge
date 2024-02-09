@@ -14,7 +14,7 @@ namespace Classes;
 internal static class DuplicateFileMerger {
 
   private unsafe class FileEntry {
-    private const int _COMPARISON_BLOCK_SIZE = 4096;
+    private const int _COMPARISON_BLOCK_SIZE = 4*1024*1024;
     private static readonly byte[] _EMPTY_BYTES = new byte[0];
     private readonly Lazy<long> _fileSize;
     private readonly Lazy<byte[]> _checksum;
@@ -202,30 +202,70 @@ internal static class DuplicateFileMerger {
         return true;
 
       fixed (byte* sourcePin = source, comparisonPin = comparison) {
-        var sourcePointer = (long*) sourcePin;
-        var comparisonPointer = (long*) comparisonPin;
-        while (sourceLength >= 8) {
-          if (*sourcePointer != *comparisonPointer)
-            return false;
+        
+        static bool CompareUInt64(byte* source, byte* comparison, ref int count) {
+          var s=(ulong*)source;
+          var c=(ulong*)comparison;
+          while(count>=sizeof(ulong)){
+            if(*s!=*c)
+              return false;
 
-          ++sourcePointer;
-          ++comparisonPointer;
-          sourceLength -= 8;
+            ++s;
+            ++c;
+            count-=sizeof(ulong);
+          }
+          return true;
         }
 
-        var byteSourcePointer = (byte*) sourcePointer;
-        var byteComparisonPointer = (byte*) comparisonPointer;
-        while (sourceLength > 0) {
-          if (*byteSourcePointer != *byteComparisonPointer)
-            return false;
+        static bool CompareUInt32(byte* source, byte* comparison, ref int count) {
+          var s=(uint*)source;
+          var c=(uint*)comparison;
+          while(count>=sizeof(uint)){
+            if(*s!=*c)
+              return false;
 
-          ++byteSourcePointer;
-          ++byteComparisonPointer;
-          --sourceLength;
+            ++s;
+            ++c;
+            count-=sizeof(uint);
+          }
+          return true;
         }
+
+        static bool CompareUInt16(byte* source, byte* comparison, ref int count) {
+          var s=(ushort*)source;
+          var c=(ushort*)comparison;
+          while(count>=sizeof(ushort)){
+            if(*s!=*c)
+              return false;
+
+            ++s;
+            ++c;
+            count-=sizeof(ushort);
+          }
+          return true;
+        }
+
+        static bool CompareBytes(byte* source, byte* comparison, ref int count) {
+          while(count>0){
+            if(*source!=*comparison)
+              return false;
+
+            ++source;
+            ++comparison;
+            --count;
+          }
+          return true;
+        }
+
+        var result=
+          CompareUInt64(sourcePin,comparisonPin,ref sourceLength)
+          && CompareUInt32(sourcePin,comparisonPin,ref sourceLength)
+          && CompareUInt16(sourcePin,comparisonPin,ref sourceLength)
+          && CompareBytes(sourcePin,comparisonPin,ref sourceLength)
+          ;
+
+        return result;
       }
-
-      return true;
     }
 
     /// <summary>
