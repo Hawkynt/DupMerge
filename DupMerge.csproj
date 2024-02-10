@@ -42,10 +42,12 @@
     <Reference Include="System.Transactions" />
   
     <Compile Include="Libraries\FilesizeFormatter.cs" />
+    <Compile Include="Classes\BufferPool.cs" />
     <Compile Include="Classes\CLI.cs" />
     <Compile Include="Classes\Configuration.cs" />
     <Compile Include="Classes\LinkStats.cs" />
     <Compile Include="Classes\DuplicateFileMerger.cs" />
+    <Compile Include="Classes\DuplicateFileMerger.FileEntry.cs" />
     <Compile Include="Classes\RuntimeStats.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
