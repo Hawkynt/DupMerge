@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -202,20 +203,49 @@ partial class DuplicateFileMerger {
 
       fixed (byte* sourcePin = source, comparisonPin = comparison) {
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static bool CompareUInt64(byte* source, byte* comparison, ref int count) {
-          var s=(long*)source;
-          var c=(long*)comparison;
-          while(count>=sizeof(long)){
-            if(*s!=*c)
+          var s = (long*)source;
+          var c = (long*)comparison;
+
+          const int UNROLL_COUNT = 8;
+          const int UNROLL_BYTES = UNROLL_COUNT * sizeof(long);
+          if(count > UNROLL_BYTES) {
+            var n = count / UNROLL_BYTES;
+            count %= UNROLL_BYTES;
+
+            do {
+
+              var i = *s == *c;
+              var j = s[1] == c[1];
+              i &= s[2] == c[2];
+              j &= s[3] == c[3];
+              i &= s[4] == c[4];
+              j &= s[5] == c[5];
+              i &= s[6] == c[6];
+              j &= s[7] == c[7];
+              i &= j;
+
+              if(!i)
+                return false;
+
+              s += UNROLL_COUNT;
+              c += UNROLL_COUNT;
+            } while (--n > 0);
+          }
+
+          while(count >= sizeof(long)){
+            if(*s != *c)
               return false;
 
             ++s;
             ++c;
-            count-=sizeof(long);
+            count -= sizeof(long);
           }
           return true;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static bool CompareUInt32(byte* source, byte* comparison, ref int count) {
           var s=(int*)source;
           var c=(int*)comparison;
@@ -230,6 +260,7 @@ partial class DuplicateFileMerger {
           return true;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static bool CompareBytes(byte* source, byte* comparison, ref int count) {
           while(count>0){
             if(*source!=*comparison)
