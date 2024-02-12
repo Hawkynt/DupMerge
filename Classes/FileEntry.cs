@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.IO;
 using System.Security.Cryptography;
@@ -36,8 +37,8 @@ internal sealed class FileEntry {
     
     // for small files, don't hash - use their contents
     if (length < checksumLength) {
-      var result = new byte[checksumLength];
-      var _ = stream.Read(result, 0, checksumLength);
+      var result = new byte[length];
+      var _ = stream.Read(result, 0, result.Length);
       return result;
     }
 
@@ -58,7 +59,7 @@ internal sealed class FileEntry {
 
     provider.TransformFinalBlock(buffer, 0, bytesRead);
 
-    return provider.Hash;
+    return provider.Hash ?? _EMPTY_BYTES;
   }
 
   /// <summary>
@@ -67,9 +68,6 @@ internal sealed class FileEntry {
   /// <param name="other">The other.</param>
   /// <returns><c>true</c> if both files are equal; otherwise, <c>false</c>.</returns>
   public bool Equals(FileEntry other) {
-    if (other is null)
-      return false;
-
     try {
       var myLength = this._FileSize;
 

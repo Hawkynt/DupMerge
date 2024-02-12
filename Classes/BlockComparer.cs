@@ -1,3 +1,4 @@
+#nullable enable
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -11,9 +12,6 @@ internal static class BlockComparer {
   /// <param name="comparisonLength">Length of the comparison.</param>
   /// <returns><c>true</c> if both arrays contain the same data; otherwise, <c>false</c>.</returns>
   public static unsafe bool IsEqual(byte[] source, int sourceLength, byte[] comparison, int comparisonLength) {
-    Debug.Assert(!ReferenceEquals(source, null), "Source must not be <null>");
-    Debug.Assert(!ReferenceEquals(comparison, null), "Comparison must not be <null>");
-
     if (sourceLength != comparisonLength)
       return false;
 

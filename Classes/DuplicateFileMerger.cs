@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -28,10 +29,10 @@ internal static class DuplicateFileMerger {
 
     for (var i = 0; i < threads.Length; ++i) {
         
-      static void Worker(object state) {
+      static void Worker(object? state) {
         var (stack, configuration, stats, seenFiles, autoResetEvent, runningWorkers) 
           = (ValueTuple<ConcurrentStack<DirectoryInfo>, Configuration,RuntimeStats,  ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>>, AutoResetEvent, int[]>) 
-          state
+          state!
           ;
 
         _ThreadWorker(stack, configuration, stats, seenFiles, autoResetEvent,runningWorkers);
@@ -50,10 +51,18 @@ internal static class DuplicateFileMerger {
   /// </summary>
   /// <param name="stack">The stack.</param>
   /// <param name="configuration">The configuration.</param>
+  /// <param name="stats">The statistics</param>
   /// <param name="seenItems">The seen items.</param>
   /// <param name="waiter">The waiter.</param>
   /// <param name="state">The state.</param>
-  private static void _ThreadWorker(ConcurrentStack<DirectoryInfo> stack, Configuration configuration,RuntimeStats stats,  ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>> seenItems, AutoResetEvent waiter, int[] state) {
+  private static void _ThreadWorker(
+    ConcurrentStack<DirectoryInfo> stack, 
+    Configuration configuration,
+    RuntimeStats stats,  
+    ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>> seenItems, 
+    EventWaitHandle waiter, 
+    int[] state
+  ) {
     while (true) {
       if (!stack.TryPop(out var current)) {
         // when stack is empty, signal we're lazy and if all other threads are also, end thread
@@ -357,7 +366,7 @@ internal static class DuplicateFileMerger {
     const int CRASH_DURING_ATTRIBUTION = 4;
     const int EVERYTHING_DONE = 5;
     var executionState = NOT_YET_STARTED;
-    FileInfo temporaryName = null;
+    FileInfo? temporaryName = null;
 
     try {
       temporaryName = _CreateTemporaryFileInSameDirectory(item);
@@ -367,7 +376,7 @@ internal static class DuplicateFileMerger {
       try {
         temporaryName.Attributes |= attributes & FileAttributes.SparseFile;
       } catch {
-        ; // NOTE: could not enable sparse file - who cares?
+        // NOTE: could not enable sparse file - who cares?
       }
 
       if ((attributes & FileAttributes.Encrypted) == FileAttributes.Encrypted)
@@ -377,7 +386,7 @@ internal static class DuplicateFileMerger {
         try {
           temporaryName.TryEnableCompression();
         } catch {
-          ; // NOTE: could not enable compression - who cares?
+          // NOTE: could not enable compression - who cares?
         }
 
       item.CopyTo(temporaryName.FullName, true);
@@ -417,7 +426,7 @@ internal static class DuplicateFileMerger {
           );
 
           // just remove temp file
-          temporaryName.Attributes &= ~(FileAttributes.ReadOnly | FileAttributes.Hidden | FileAttributes.System);
+          temporaryName!.Attributes &= ~(FileAttributes.ReadOnly | FileAttributes.Hidden | FileAttributes.System);
           temporaryName.Delete();
           break;
         }
@@ -463,7 +472,7 @@ internal static class DuplicateFileMerger {
         result.Refresh();
         return result;
       } catch (IOException e) when (e.HResult == ERROR_FILE_EXISTS) {
-        ; // possibly another process created the file already
+        // possibly another process created the file already
       }
     }
   }

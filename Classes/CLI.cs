@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 
 namespace Classes;
@@ -20,7 +21,7 @@ internal static class CLI {
       var index = @switch.IndexOf('=');
 
       var name = @switch;
-      string value = null;
+      string? value = null;
       if (index >= 0) {
         value = @switch[(index + 1)..];
         name = @switch[..index];
@@ -76,18 +77,18 @@ Usage: DupMerge [<options>] [<directories>]
             configuration.ShowInfoOnly = true;
             break;
           }
-        case "-t":
-        case "--threads": {
+        case "-t" when value is not null:
+        case "--threads" when value is not null: {
             configuration.MaximumCrawlerThreads = int.Parse(value);
             break;
           }
-        case "-m":
-        case "--minimum": {
+        case "-m" when value is not null:
+        case "--minimum" when value is not null: {
             configuration.MinimumFileSizeInBytes = long.Parse(value);
             break;
           }
-        case "-M":
-        case "--maximum": {
+        case "-M" when value is not null:
+        case "--maximum" when value is not null: {
             configuration.MaximumFileSizeInBytes = long.Parse(value);
             break;
           }
