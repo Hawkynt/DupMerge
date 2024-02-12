@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Classes;
 
@@ -25,8 +22,8 @@ internal class CLI {
       var name = @switch;
       string value = null;
       if (index >= 0) {
-        value = @switch.Substring(index + 1);
-        name = @switch.Substring(0, index);
+        value = @switch[(index + 1)..];
+        name = @switch[..index];
       }
 
       switch (name) {

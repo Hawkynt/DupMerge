@@ -7,8 +7,8 @@ internal class RuntimeStats {
   private long _fileCount;
   private long _folderCount;
 
-  public LinkStats HardLinkStats { get; } = new LinkStats();
-  public LinkStats SymbolicLinkStats { get; } = new LinkStats();
+  public LinkStats HardLinkStats { get; } = new();
+  public LinkStats SymbolicLinkStats { get; } = new();
   public long FileCount => this._fileCount;
   public long FolderCount => this._folderCount;
   public long BytesTotal => this._bytesTotal;
