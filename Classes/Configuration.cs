@@ -2,7 +2,7 @@
 
 namespace Classes;
 
-internal class Configuration {
+internal sealed class Configuration {
   
   public long MinimumFileSizeInBytes { get; set; } = 1;
   public long MaximumFileSizeInBytes { get; set; } = long.MaxValue;

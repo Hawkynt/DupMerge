@@ -8,7 +8,7 @@ using Libraries;
 
 namespace Classes;
 
-internal static partial class DuplicateFileMerger {
+internal static class DuplicateFileMerger {
 
   /// <summary>
   /// Processes the given folders with the given configuration.
@@ -29,12 +29,16 @@ internal static partial class DuplicateFileMerger {
     for (var i = 0; i < threads.Length; ++i) {
         
       static void Worker(object state) {
-        var t = (Tuple<ConcurrentStack<DirectoryInfo>, Configuration,RuntimeStats,  ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>>, AutoResetEvent, int[]>) state;
-        _ThreadWorker(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5,t.Item6);
+        var (stack, configuration, stats, seenFiles, autoResetEvent, runningWorkers) 
+          = (ValueTuple<ConcurrentStack<DirectoryInfo>, Configuration,RuntimeStats,  ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>>, AutoResetEvent, int[]>) 
+          state
+          ;
+
+        _ThreadWorker(stack, configuration, stats, seenFiles, autoResetEvent,runningWorkers);
       }
 
       threads[i] = new(Worker);
-      threads[i].Start(Tuple.Create(stack, configuration, stats,seenFiles, autoresetEvent, runningWorkers));
+      threads[i].Start((stack, configuration, stats,seenFiles, autoresetEvent, runningWorkers));
     }
 
     foreach (var thread in threads)
@@ -56,7 +60,7 @@ internal static partial class DuplicateFileMerger {
         if (Interlocked.Decrement(ref state[0]) == 0) {
           // signal another thread to continue exiting
           waiter.Set();
-          Console.WriteLine($"Ending Thread #{Thread.CurrentThread.ManagedThreadId}");
+          Console.WriteLine($"Ending Thread #{Environment.CurrentManagedThreadId}");
           return;
         }
 

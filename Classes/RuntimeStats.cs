@@ -2,7 +2,7 @@
 
 namespace Classes;
 
-internal class RuntimeStats {
+internal sealed class RuntimeStats {
   private long _bytesTotal;
   private long _fileCount;
   private long _folderCount;

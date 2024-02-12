@@ -7,7 +7,7 @@ using Libraries;
 
 namespace DupMerge;
 
-class Program {
+internal static class Program {
   
   static int Main(string[] args) {
     var directories = new List<DirectoryInfo>();

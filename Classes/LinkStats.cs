@@ -2,7 +2,7 @@
 
 namespace Classes;
 
-public class LinkStats {
+public sealed class LinkStats {
   private long _seen;
   private long _created;
   private long _deleted;

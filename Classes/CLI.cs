@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Classes;
 
-internal class CLI {
+internal static class CLI {
   
   public enum ExitCode {
     Success = 0,
