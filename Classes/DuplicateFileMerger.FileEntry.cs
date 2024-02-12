@@ -1,14 +1,10 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
-using System.Threading;
 using System.Threading.Tasks;
-using Libraries;
 
 namespace Classes;
 
@@ -16,13 +12,13 @@ partial class DuplicateFileMerger {
 
   private unsafe class FileEntry {
     private const int _COMPARISON_BLOCK_SIZE = 4*1024*1024;
-    private static BufferPool _pool=new(_COMPARISON_BLOCK_SIZE);
-    private static readonly byte[] _EMPTY_BYTES = new byte[0];
+    private static readonly BufferPool _pool=new(_COMPARISON_BLOCK_SIZE);
+    private static readonly byte[] _EMPTY_BYTES = Array.Empty<byte>();
     private readonly Lazy<byte[]> _checksum;
 
     public FileEntry(FileInfo source) {
       this._Source = source;
-      this._checksum = new Lazy<byte[]>(this._CalculateChecksum);
+      this._checksum = new(this._CalculateChecksum);
       this._FileSize = source.Length;
     }
 
@@ -40,9 +36,7 @@ partial class DuplicateFileMerger {
       if (length <= 0)
         return _EMPTY_BYTES;
 
-      byte[] result;
-
-      using var provider = new SHA512CryptoServiceProvider();
+      using var provider = SHA512.Create();
       using var stream = new FileStream(this._Source.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
       using var rented = _pool.Use();
 
@@ -59,9 +53,8 @@ partial class DuplicateFileMerger {
       }
 
       provider.TransformFinalBlock(buffer, 0, bytesRead);
-      result = provider.Hash;
-      
-      return result;
+
+      return provider.Hash;
     }
 
     /// <summary>
@@ -125,8 +118,7 @@ partial class DuplicateFileMerger {
         var sourceBufferB = sbb.Buffer;
         var comparisonBufferB = cbb.Buffer;
 
-        long lastBlockSize;
-        var blockCount = Math.DivRem(myLength, _COMPARISON_BLOCK_SIZE, out lastBlockSize);
+        var blockCount = Math.DivRem(myLength, _COMPARISON_BLOCK_SIZE, out var lastBlockSize);
 
         // if there are bytes left in a partly filled last block - we need one block more
         if (lastBlockSize != 0)

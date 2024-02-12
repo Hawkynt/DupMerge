@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
-using System.Threading.Tasks;
 using Libraries;
 
 namespace Classes;
@@ -26,23 +23,22 @@ internal static partial class DuplicateFileMerger {
     stats.IncrementFolders(directories.Count);
     var threads = new Thread[Math.Max(1, configuration.MaximumCrawlerThreads)];
 
-    using (var autoresetEvent = new AutoResetEvent(false)) {
-      var runningWorkers = new[] {threads.Length};
+    using var autoresetEvent = new AutoResetEvent(false);
+    var runningWorkers = new[] {threads.Length};
 
-      for (var i = 0; i < threads.Length; ++i) {
+    for (var i = 0; i < threads.Length; ++i) {
         
-        static void Worker(object state) {
-          var t = (Tuple<ConcurrentStack<DirectoryInfo>, Configuration,RuntimeStats,  ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>>, AutoResetEvent, int[]>) state;
-          _ThreadWorker(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5,t.Item6);
-        }
-
-        threads[i] = new Thread(Worker);
-        threads[i].Start(Tuple.Create(stack, configuration, stats,seenFiles, autoresetEvent, runningWorkers));
+      static void Worker(object state) {
+        var t = (Tuple<ConcurrentStack<DirectoryInfo>, Configuration,RuntimeStats,  ConcurrentDictionary<long, ConcurrentDictionary<string, FileEntry>>, AutoResetEvent, int[]>) state;
+        _ThreadWorker(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5,t.Item6);
       }
 
-      foreach (var thread in threads)
-        thread.Join();
+      threads[i] = new(Worker);
+      threads[i].Start(Tuple.Create(stack, configuration, stats,seenFiles, autoresetEvent, runningWorkers));
     }
+
+    foreach (var thread in threads)
+      thread.Join();
   }
 
   /// <summary>
@@ -103,7 +99,7 @@ internal static partial class DuplicateFileMerger {
     if (length < configuration.MinimumFileSizeInBytes || length > configuration.MaximumFileSizeInBytes)
       return;
 
-    var knownWithThisLength = seenItems.GetOrAdd(length, _ => new ConcurrentDictionary<string, FileEntry>());
+    var knownWithThisLength = seenItems.GetOrAdd(length, _ => new());
 
     // preventing other threads from processing files with the same size
     // avoiding a race condition where all known links to a file are removed at once, thus loosing data completely 
@@ -144,7 +140,7 @@ internal static partial class DuplicateFileMerger {
     foreach (var target in hardlinks) {
       isHardLink = true;
       Console.WriteLine($"[Verbose] {item.FullName} > {target.FullName}");
-      knownWithThisLength.TryAdd(_GenerateKey(target), new FileEntry(target));
+      knownWithThisLength.TryAdd(_GenerateKey(target), new(target));
     }
 
     if (isHardLink) {
@@ -167,7 +163,7 @@ internal static partial class DuplicateFileMerger {
     }
 
     if (symlink != null) {
-      knownWithThisLength.TryAdd(symlink, new FileEntry(new FileInfo(symlink)));
+      knownWithThisLength.TryAdd(symlink, new(new(symlink)));
       stats.SymbolicLinkStats.IncreaseSeen();
       if (configuration.ShowInfoOnly)
         return;
@@ -282,7 +278,7 @@ internal static partial class DuplicateFileMerger {
       return;
     }
 
-    if (configuration.SetReadOnlyAttributeOnExistingSymbolicLinks && ((item.Attributes & FileAttributes.ReadOnly) != FileAttributes.ReadOnly)) {
+    if (configuration.SetReadOnlyAttributeOnExistingSymbolicLinks && (item.Attributes & FileAttributes.ReadOnly) != FileAttributes.ReadOnly) {
       Console.WriteLine($"[Info] Setting read-only attribute on Symlink {item.FullName}");
       item.Attributes |= FileAttributes.ReadOnly;
       return;
@@ -325,7 +321,7 @@ internal static partial class DuplicateFileMerger {
       return;
     }
 
-    if (configuration.SetReadOnlyAttributeOnExistingHardLinks && ((item.Attributes & FileAttributes.ReadOnly) != FileAttributes.ReadOnly)) {
+    if (configuration.SetReadOnlyAttributeOnExistingHardLinks && (item.Attributes & FileAttributes.ReadOnly) != FileAttributes.ReadOnly) {
       Console.WriteLine($"[Info] Setting read-only attribute on Hardlink {item.FullName}");
       item.Attributes |= FileAttributes.ReadOnly;
       return;
@@ -356,7 +352,7 @@ internal static partial class DuplicateFileMerger {
     const int CRASH_DURING_RENAME = 3;
     const int CRASH_DURING_ATTRIBUTION = 4;
     const int EVERYTHING_DONE = 5;
-    int executionState = NOT_YET_STARTED;
+    var executionState = NOT_YET_STARTED;
     FileInfo temporaryName = null;
 
     try {
@@ -365,7 +361,7 @@ internal static partial class DuplicateFileMerger {
 
       // sparse and compress before copying
       try {
-        temporaryName.Attributes |= (attributes & FileAttributes.SparseFile);
+        temporaryName.Attributes |= attributes & FileAttributes.SparseFile;
       } catch {
         ; // NOTE: could not enable sparse file - who cares?
       }
@@ -410,10 +406,11 @@ internal static partial class DuplicateFileMerger {
 
         case CRASH_COPYING_FILE:
         case CRASH_DURING_DELETE: {
-          if (executionState == CRASH_COPYING_FILE)
-            Console.WriteLine($"[Verbose] Exception during CopyFile {item.FullName}");
-          else
-            Console.WriteLine($"[Verbose] Exception during DeleteFile {item.FullName}");
+          Console.WriteLine(
+            executionState == CRASH_COPYING_FILE 
+              ? $"[Verbose] Exception during CopyFile {item.FullName}" 
+              : $"[Verbose] Exception during DeleteFile {item.FullName}"
+          );
 
           // just remove temp file
           temporaryName.Attributes &= ~(FileAttributes.ReadOnly | FileAttributes.Hidden | FileAttributes.System);
@@ -437,10 +434,9 @@ internal static partial class DuplicateFileMerger {
   /// </summary>
   /// <param name="item">The item.</param>
   /// <param name="knownWithThisLength">List of known files with the same length.</param>
-  private static void _RemoveFileEntry(FileInfo item, ConcurrentDictionary<string, FileEntry> knownWithThisLength) {
-    FileEntry checksum;
-    knownWithThisLength.TryRemove(_GenerateKey(item), out checksum);
-  }
+  private static void _RemoveFileEntry(FileInfo item, ConcurrentDictionary<string, FileEntry> knownWithThisLength) 
+    => knownWithThisLength.TryRemove(_GenerateKey(item), out _)
+    ;
 
   /// <summary>
   /// Creates a temporary file in the same directory as the original.
