@@ -30,10 +30,20 @@ internal sealed class FileEntry {
     if (length <= 0)
       return _EMPTY_BYTES;
 
-    using var provider = SHA512.Create();
     using var stream = new FileStream(this._Source.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
-    using var rented = _pool.Use();
+    
+    var checksumLength = SHA512.HashSizeInBytes;
+    
+    // for small files, don't hash - use their contents
+    if (length < checksumLength) {
+      var result = new byte[checksumLength];
+      var _ = stream.Read(result, 0, checksumLength);
+      return result;
+    }
 
+    using var provider = SHA512.Create();
+
+    using var rented = _pool.Use();
     var buffer = rented.Buffer;
 
     // read first block
@@ -57,7 +67,7 @@ internal sealed class FileEntry {
   /// <param name="other">The other.</param>
   /// <returns><c>true</c> if both files are equal; otherwise, <c>false</c>.</returns>
   public bool Equals(FileEntry other) {
-    if (ReferenceEquals(other, null))
+    if (other is null)
       return false;
 
     try {
