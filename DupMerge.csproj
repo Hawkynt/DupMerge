@@ -40,7 +40,12 @@
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Transactions" />
-  
+    <Compile Include="..\Framework\Corlib.Extensions\System.cs">
+      <Link>Framework\System.cs</Link>
+    </Compile>
+    <Compile Include="..\Framework\Corlib.Extensions\System\IO\FileInfo.cs">
+      <Link>Framework\FileInfo.cs</Link>
+    </Compile>
     <Compile Include="Libraries\FilesizeFormatter.cs" />
     <Compile Include="Classes\BufferPool.cs" />
     <Compile Include="Classes\CLI.cs" />
@@ -53,7 +58,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="App.config" />
     <None Include="app.manifest" />
-
     <!-- From Backports -->
     <Compile Include="..\Framework\Backports\System\Diagnostics\CodeAnalysis\NotNullAttribute.cs">
       <Link>Framework\NotNullAttribute.cs</Link>
@@ -70,16 +74,13 @@
     <Compile Include="..\Framework\Backports\System\Index.cs">
       <Link>Framework\Index.cs</Link>
     </Compile>
-
     <!-- From Corlib -->
     <Compile Include="..\Framework\Corlib.Extensions\Guard\Against.cs">
       <Link>Framework\Against.cs</Link>
     </Compile>
-    
     <Compile Include="..\Framework\Corlib.Extensions\Guard\AlwaysThrow.cs">
       <Link>Framework\AlwaysThrow.cs</Link>
     </Compile>
-  
     <Compile Include="..\Framework\Corlib.Extensions\Guard\Against.T4.cs">
       <Link>Framework\Against.T4.cs</Link>
       <AutoGen>True</AutoGen>
@@ -91,63 +92,41 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Against.T4.cs</LastGenOutput>
     </Content>
-    
     <Compile Include="..\Framework\Corlib.Extensions\System\Collections\Concurrent\ConcurrentStack.cs">
       <Link>Framework\ConcurrentStack.cs</Link>
     </Compile>
-  
     <Compile Include="..\Framework\Corlib.Extensions\System\Collections\Generic\Enumerable.cs">
       <Link>Framework\Enumerable.cs</Link>
     </Compile>
-  
     <Compile Include="..\Framework\Corlib.Extensions\System\IO\Path.cs">
       <Link>Framework\Path.cs</Link>
     </Compile>
-    
     <Compile Include="..\Framework\Corlib.Extensions\System\IO\DirectoryInfo.cs">
       <Link>Framework\DirectoryInfo.cs</Link>
     </Compile>
-    
-    <Compile Include="..\Framework\Corlib.Extensions\System\IO\FileInfo.cs">
-      <Link>Framework\FileInfo.cs</Link>
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>FileInfo.tt</DependentUpon>
-    </Compile>
-    <Content Include="..\Framework\Corlib.Extensions\System\IO\FileInfo.tt">
-      <Link>Framework\FileInfo.tt</Link>
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>FileInfo.cs</LastGenOutput>
-    </Content>
-    
     <Compile Include="..\Framework\Corlib.Extensions\System\IO\Link.cs">
       <Link>Framework\Link.cs</Link>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>System.IO.Link.tt</DependentUpon>
+      <DependentUpon>Link.tt</DependentUpon>
     </Compile>
     <Content Include="..\Framework\Corlib.Extensions\System\IO\Link.tt">
       <Link>Framework\Link.tt</Link>
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Link.cs</LastGenOutput>
     </Content>
-
     <Compile Include="..\Framework\Corlib.Extensions\System\IO\Stream.cs">
       <Link>Framework\Stream.cs</Link>
     </Compile>
-    
     <Compile Include="..\Framework\Corlib.Extensions\System\StaticMethodLocal.cs">
       <Link>Framework\StaticMethodLocal.cs</Link>
     </Compile>
-    
     <Compile Include="..\Framework\Corlib.Extensions\System\String.cs">
       <Link>Framework\String.cs</Link>
     </Compile>
-    
     <Compile Include="..\Framework\Corlib.Extensions\System\Char.cs">
       <Link>Framework\Char.cs</Link>
     </Compile>
-
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
