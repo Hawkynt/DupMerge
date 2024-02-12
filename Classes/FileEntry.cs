@@ -33,7 +33,11 @@ internal sealed class FileEntry {
 
     using var stream = new FileStream(this._Source.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
     
+  #if NET7_0_OR_GREATER
     var checksumLength = SHA512.HashSizeInBytes;
+  #else
+    var checksumLength = 512 / 8;
+  #endif
     
     // for small files, don't hash - use their contents
     if (length < checksumLength) {

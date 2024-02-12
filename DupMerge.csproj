@@ -3,7 +3,7 @@
     <ProjectGuid>{7B27249D-B1C7-4A7B-84B1-ECFAA77C0A09}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <Version>1.0.1</Version>
-    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetFrameworks>net48;net7.0</TargetFrameworks>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <langversion>default</langversion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -16,8 +16,6 @@
     <Copyright>Copyright © Hawkynt 2018-2024</Copyright>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <StartupObject>DupMerge.Program</StartupObject>
-    <TrimMode>full</TrimMode>
-    <PublishTrimmed>true</PublishTrimmed>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
   </PropertyGroup>
@@ -28,6 +26,16 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   <Import Project="..\Framework\VersionSpecificSymbols.Common.prop" />
+  <PropertyGroup Condition="$(IsNetCore)">
+    <TrimMode>full</TrimMode>
+    <PublishTrimmed>true</PublishTrimmed>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$(IsNetFramework)">
+    <Reference Condition="$(TargetFramework) != 'net35'" Include="Microsoft.CSharp" />
+    <Reference Include="System.Transactions" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="T4.Build" Version="0.2.4" PrivateAssets="All" />
 
