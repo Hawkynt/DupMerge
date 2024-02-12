@@ -1,88 +1,49 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{7B27249D-B1C7-4A7B-84B1-ECFAA77C0A09}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DupMerge</RootNamespace>
-    <AssemblyName>DupMerge</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <Version>1.0.1</Version>
+    <TargetFramework>net7.0-windows</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
     <langversion>default</langversion>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <AssemblyTitle>DupMerge</AssemblyTitle>
+    <Company>»SynthelicZ«</Company>
+    <Product>DupMerge</Product>
+    <Description>Merges duplicate files into hardlinks and symlinks.</Description>
+    <Copyright>Copyright © Hawkynt 2018-2024</Copyright>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <StartupObject>DupMerge.Program</StartupObject>
+    <TrimMode>full</TrimMode>
+    <PublishTrimmed>true</PublishTrimmed>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DebugType>none</DebugType>
   </PropertyGroup>
+  <Import Project="..\Framework\VersionSpecificSymbols.Common.prop" />
   <ItemGroup>
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Transactions" />
-    <Compile Include="..\Framework\Corlib.Extensions\System.cs">
-      <Link>Framework\System.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Corlib.Extensions\System\IO\FileInfo.cs">
-      <Link>Framework\FileInfo.cs</Link>
-    </Compile>
-    <Compile Include="Libraries\FilesizeFormatter.cs" />
-    <Compile Include="Classes\BufferPool.cs" />
-    <Compile Include="Classes\CLI.cs" />
-    <Compile Include="Classes\Configuration.cs" />
-    <Compile Include="Classes\LinkStats.cs" />
-    <Compile Include="Classes\DuplicateFileMerger.cs" />
-    <Compile Include="Classes\DuplicateFileMerger.FileEntry.cs" />
-    <Compile Include="Classes\RuntimeStats.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="App.config" />
+    <PackageReference Include="T4.Build" Version="0.2.4" PrivateAssets="All" />
+
+    <Compile Include="..\Framework\Corlib.Extensions\System.cs" Link="Framework\System.cs" />
+    <Compile Include="..\Framework\Corlib.Extensions\System\IO\FileInfo.cs" Link="Framework\FileInfo.cs" />
     <None Include="app.manifest" />
     <!-- From Backports -->
-    <Compile Include="..\Framework\Backports\System\Diagnostics\CodeAnalysis\NotNullAttribute.cs">
-      <Link>Framework\NotNullAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Backports\System\Diagnostics\CodeAnalysis\DoesNotReturnAttribute.cs">
-      <Link>Framework\DoesNotReturnAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Backports\System\Runtime\CompilerServices\CallerArgumentExpressionAttribute.cs">
-      <Link>Framework\CallerArgumentExpressionAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Backports\System\Range.cs">
-      <Link>Framework\Range.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Backports\System\Index.cs">
-      <Link>Framework\Index.cs</Link>
-    </Compile>
+    <Compile Include="..\Framework\Backports\System\Diagnostics\CodeAnalysis\NotNullAttribute.cs" Link="Framework\NotNullAttribute.cs" />
+    <Compile Include="..\Framework\Backports\System\Diagnostics\CodeAnalysis\DoesNotReturnAttribute.cs" Link="Framework\DoesNotReturnAttribute.cs" />
+    <Compile Include="..\Framework\Backports\System\Runtime\CompilerServices\CallerArgumentExpressionAttribute.cs" Link="Framework\CallerArgumentExpressionAttribute.cs" />
+    <Compile Include="..\Framework\Backports\System\Range.cs" Link="Framework\Range.cs" />
+    <Compile Include="..\Framework\Backports\System\Index.cs" Link="Framework\Index.cs" />
     <!-- From Corlib -->
-    <Compile Include="..\Framework\Corlib.Extensions\Guard\Against.cs">
-      <Link>Framework\Against.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Corlib.Extensions\Guard\AlwaysThrow.cs">
-      <Link>Framework\AlwaysThrow.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Corlib.Extensions\Guard\Against.T4.cs">
-      <Link>Framework\Against.T4.cs</Link>
+    <Compile Include="..\Framework\Corlib.Extensions\Guard\Against.cs" Link="Framework\Against.cs" />
+    <Compile Include="..\Framework\Corlib.Extensions\Guard\AlwaysThrow.cs" Link="Framework\AlwaysThrow.cs" />
+    <Compile Include="..\Framework\Corlib.Extensions\Guard\Against.T4.cs" Link="Framework\Against.T4.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Against.T4.tt</DependentUpon>
@@ -92,20 +53,11 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Against.T4.cs</LastGenOutput>
     </Content>
-    <Compile Include="..\Framework\Corlib.Extensions\System\Collections\Concurrent\ConcurrentStack.cs">
-      <Link>Framework\ConcurrentStack.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Corlib.Extensions\System\Collections\Generic\Enumerable.cs">
-      <Link>Framework\Enumerable.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Corlib.Extensions\System\IO\Path.cs">
-      <Link>Framework\Path.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Corlib.Extensions\System\IO\DirectoryInfo.cs">
-      <Link>Framework\DirectoryInfo.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Corlib.Extensions\System\IO\Link.cs">
-      <Link>Framework\Link.cs</Link>
+    <Compile Include="..\Framework\Corlib.Extensions\System\Collections\Concurrent\ConcurrentStack.cs" Link="Framework\ConcurrentStack.cs" />
+    <Compile Include="..\Framework\Corlib.Extensions\System\Collections\Generic\Enumerable.cs" Link="Framework\Enumerable.cs" />
+    <Compile Include="..\Framework\Corlib.Extensions\System\IO\Path.cs" Link="Framework\Path.cs" />
+    <Compile Include="..\Framework\Corlib.Extensions\System\IO\DirectoryInfo.cs" Link="Framework\DirectoryInfo.cs" />
+    <Compile Include="..\Framework\Corlib.Extensions\System\IO\Link.cs" Link="Framework\Link.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Link.tt</DependentUpon>
@@ -115,26 +67,9 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Link.cs</LastGenOutput>
     </Content>
-    <Compile Include="..\Framework\Corlib.Extensions\System\IO\Stream.cs">
-      <Link>Framework\Stream.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Corlib.Extensions\System\StaticMethodLocal.cs">
-      <Link>Framework\StaticMethodLocal.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Corlib.Extensions\System\String.cs">
-      <Link>Framework\String.cs</Link>
-    </Compile>
-    <Compile Include="..\Framework\Corlib.Extensions\System\Char.cs">
-      <Link>Framework\Char.cs</Link>
-    </Compile>
+    <Compile Include="..\Framework\Corlib.Extensions\System\IO\Stream.cs" Link="Framework\Stream.cs" />
+    <Compile Include="..\Framework\Corlib.Extensions\System\StaticMethodLocal.cs" Link="Framework\StaticMethodLocal.cs" />
+    <Compile Include="..\Framework\Corlib.Extensions\System\String.cs" Link="Framework\String.cs" />
+    <Compile Include="..\Framework\Corlib.Extensions\System\Char.cs" Link="Framework\Char.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
-  <Import Project="..\Framework\VersionSpecificSymbols.Common.prop" />
 </Project>
