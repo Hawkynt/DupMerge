@@ -36,6 +36,11 @@ public sealed class BufferPool {
     /// Accessing this property after the object has been disposed throws an <see cref="ObjectDisposedException"/>.
     /// </remarks>
     byte[] Buffer { get; }
+    
+    /// <summary>
+    /// The assured length of this buffer.
+    /// </summary>
+    int Length { get; }
   }
 
   /// <summary>
@@ -50,8 +55,7 @@ public sealed class BufferPool {
     /// The <see cref="BufferPool"/> that owns this buffer, responsible for its allocation and deallocation.
     /// </summary>
     private readonly BufferPool _owner;
-    
-    
+        
     /// <summary>
     /// The byte array buffer. Access to this field is managed to ensure it is not used after the buffer has been returned to the pool.
     /// </summary>
@@ -59,6 +63,9 @@ public sealed class BufferPool {
 
     /// <inheritdoc/>
     public byte[] Buffer => this._buffer ?? throw new ObjectDisposedException(nameof(this.Buffer));
+    
+    /// <inheritdoc/>
+    public int Length => this._owner.BufferSize;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RentBuffer"/> class, renting a buffer from the specified <see cref="BufferPool"/>.
@@ -96,6 +103,11 @@ public sealed class BufferPool {
   /// This field determines the size of all buffers managed by the pool. It is set during the pool's construction and remains constant throughout the lifetime of the pool.
   /// </remarks>
   private readonly int _bufferSize;
+
+  /// <summary>
+  /// Gets the assured size of all buffers rented from this pool.
+  /// </summary>
+  public int BufferSize => this._bufferSize;
 
   /// <summary>
   /// The maximum number of buffers that can be waiting in the pool for reuse.

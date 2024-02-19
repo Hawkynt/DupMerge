@@ -5,10 +5,33 @@ using System.Security.Cryptography;
 
 namespace Classes;
 
+/// <summary>
+/// Represents a file already seen by the crawlers, encapsulating details such as its checksum,
+/// and providing utilities for comparison.
+/// </summary>
 internal sealed class FileEntry {
+
+  /// <summary>
+  /// The size of the blocks
+  /// </summary>
   private const int _COMPARISON_BLOCK_SIZE = 4 * 1024 * 1024;
+  
+  /// <summary>
+  /// The pool to rent buffers for comparison operations from.
+  /// </summary>
   private static readonly BufferPool _pool = new(_COMPARISON_BLOCK_SIZE);
+  
+  /// <summary>
+  /// An empty array.
+  /// </summary>
   private static readonly byte[] _EMPTY_BYTES = Array.Empty<byte>();
+  
+  /// <summary>
+  /// Lazily calculates and stores the checksum of this file entry, ensuring the checksum is generated only when needed and cached thereafter.
+  /// </summary>
+  /// <remarks>
+  /// The checksum is calculated the first time it is accessed, allowing for efficient resource usage by avoiding upfront computation.
+  /// </remarks>
   private readonly Lazy<byte[]> _checksum;
 
   public FileEntry(FileInfo source) {
@@ -42,7 +65,7 @@ internal sealed class FileEntry {
     // for small files, don't hash - use their contents
     if (length < checksumLength) {
       var result = new byte[length];
-      var _ = stream.Read(result, 0, result.Length);
+      var _ = stream.Read(result);
       return result;
     }
 
@@ -52,13 +75,14 @@ internal sealed class FileEntry {
     var buffer = rented.Buffer;
 
     // read first block
-    var bytesRead = stream.Read(buffer, 0, _COMPARISON_BLOCK_SIZE);
-    if (length > _COMPARISON_BLOCK_SIZE) {
+    var bufferLength = rented.Length;
+    var bytesRead = stream.Read(buffer, 0, bufferLength);
+    if (length > bufferLength) {
       provider.TransformBlock(buffer, 0, bytesRead, buffer, 0);
 
       // read last block (or what is left of it)
-      stream.Seek(Math.Max(_COMPARISON_BLOCK_SIZE, length - _COMPARISON_BLOCK_SIZE), SeekOrigin.Begin);
-      bytesRead = stream.Read(buffer, 0, _COMPARISON_BLOCK_SIZE);
+      stream.Seek(Math.Max(bufferLength, length - bufferLength), SeekOrigin.Begin);
+      bytesRead = stream.Read(buffer, 0, bufferLength);
     }
 
     provider.TransformFinalBlock(buffer, 0, bytesRead);
@@ -67,10 +91,10 @@ internal sealed class FileEntry {
   }
 
   /// <summary>
-  /// Tests if the given entry has equal file content and this entry.
+  /// Tests if the given entry has equal file content to this entry.
   /// </summary>
   /// <param name="other">The other.</param>
-  /// <returns><c>true</c> if both files are equal; otherwise, <c>false</c>.</returns>
+  /// <returns><see langword="true"/> if both files are equal; otherwise, <see langword="false"/>.</returns>
   public bool Equals(FileEntry other) {
     try {
       var myLength = this._FileSize;
@@ -92,6 +116,8 @@ internal sealed class FileEntry {
       using var sourceStream = new FileStream(this._Source.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
       using var comparisonStream = new FileStream(other._Source.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
 
+      var bufferLength = _pool.BufferSize;
+    
       // NOTE: we're going to compare buffers (A, A') while reading the next blocks (B, B') in already
       using var sba = _pool.Use();
       using var cba = _pool.Use();
@@ -103,7 +129,7 @@ internal sealed class FileEntry {
       var sourceBufferB = sbb.Buffer;
       var comparisonBufferB = cbb.Buffer;
 
-      var blockCount = Math.DivRem(myLength, _COMPARISON_BLOCK_SIZE, out var lastBlockSize);
+      var blockCount = Math.DivRem(myLength, bufferLength, out var lastBlockSize);
 
       // if there are bytes left in a partly filled last block - we need one block more
       if (lastBlockSize != 0)
@@ -118,8 +144,8 @@ internal sealed class FileEntry {
       var blockIndex = enumerator.Current;
 
       // start reading buffers into A and A'
-      var sourceAsync = sourceStream.ReadBytesAsync(blockIndex * _COMPARISON_BLOCK_SIZE, sourceBufferA, 0, _COMPARISON_BLOCK_SIZE);
-      var comparisonAsync = comparisonStream.ReadBytesAsync(blockIndex * _COMPARISON_BLOCK_SIZE, comparisonBufferA, 0, _COMPARISON_BLOCK_SIZE);
+      var sourceAsync = sourceStream.ReadBytesAsync(blockIndex * bufferLength, sourceBufferA);
+      var comparisonAsync = comparisonStream.ReadBytesAsync(blockIndex * bufferLength, comparisonBufferA);
       int sourceBytes;
       int comparisonBytes;
 
@@ -129,8 +155,8 @@ internal sealed class FileEntry {
 
         // start reading next buffers into B and B'
         blockIndex = enumerator.Current;
-        sourceAsync = sourceStream.ReadBytesAsync(blockIndex * _COMPARISON_BLOCK_SIZE, sourceBufferB, 0, _COMPARISON_BLOCK_SIZE);
-        comparisonAsync = comparisonStream.ReadBytesAsync(blockIndex * _COMPARISON_BLOCK_SIZE, comparisonBufferB, 0, _COMPARISON_BLOCK_SIZE);
+        sourceAsync = sourceStream.ReadBytesAsync(blockIndex * bufferLength, sourceBufferB);
+        comparisonAsync = comparisonStream.ReadBytesAsync(blockIndex * bufferLength, comparisonBufferB);
 
         // compare A and A' and return false upon difference
         if (!BlockComparer.IsEqual(sourceBufferA, sourceBytes, comparisonBufferA, comparisonBytes))
