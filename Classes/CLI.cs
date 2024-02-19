@@ -19,19 +19,16 @@ internal static class CLI {
   public static void ProcessCommandLine(IEnumerable<string> switches, Configuration configuration) {
     foreach (var @switch in switches) {
       var index = @switch.IndexOf('=');
-
-      var name = @switch;
-      string? value = null;
-      if (index >= 0) {
-        value = @switch[(index + 1)..];
-        name = @switch[..index];
-      }
-
+      var (name, value) = index >= 0 
+        ? (@switch[..index], @switch[(index + 1)..]) 
+        : (@switch, (string?)null)
+      ;
+    
       switch (name) {
         case "/?":
         case "-H":
-        case "--help": {
-            Console.WriteLine(@"
+        case "--help":
+          Console.WriteLine(@"
 DupMerge (c)2018-2024 Hawkynt
 Creates or removes links to duplicate files.
 Usage: DupMerge [<options>] [<directories>]
@@ -69,9 +66,8 @@ Usage: DupMerge [<options>] [<directories>]
   -ro   , --readonly
       Same as -sro -uro
           ");
-            Environment.Exit((int)ExitCode.Success);
-            break;
-          }
+          Environment.Exit((int)ExitCode.Success);
+          break;
         case "-v":
         case "--info":
           configuration.ShowInfoOnly = true;
