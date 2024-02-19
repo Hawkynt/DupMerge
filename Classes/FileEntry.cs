@@ -1,7 +1,10 @@
 #nullable enable
 using System;
+using System.ComponentModel;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using Libraries;
 
 namespace Classes;
 
@@ -12,14 +15,40 @@ namespace Classes;
 internal sealed class FileEntry {
 
   /// <summary>
-  /// The size of the blocks
+  /// P/Invoke stuff
   /// </summary>
-  private const int _COMPARISON_BLOCK_SIZE = 4 * 1024 * 1024;
+  private static class NativeMethods {
+    
+    public readonly record struct DiskFreeSpace(uint SectorsPerCluster, uint BytesPerSector, uint NumberOfFreeClusters, uint TotalNumberOfClusters);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "GetDiskFreeSpaceW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool _GetDiskFreeSpace(
+      string lpRootPathName,
+      out uint lpSectorsPerCluster,
+      out uint lpBytesPerSector,
+      out uint lpNumberOfFreeClusters,
+      out uint lpTotalNumberOfClusters
+    );
+
+    public static DiskFreeSpace GetDiskFreeSpace(FileSystemInfo entry) {
+      if (!_GetDiskFreeSpace(Path.GetPathRoot(entry.FullName) ?? ".", out var sectorsPerCluster, out var bytesPerSector, out var numberOfFreeClusters, out var totalNumberOfClusters))
+        throw new Win32Exception(Marshal.GetLastWin32Error());
+
+      return new(sectorsPerCluster, bytesPerSector, numberOfFreeClusters, totalNumberOfClusters);
+    }
+
+  }
+
+  /// <summary>
+  /// The pool to rent buffers for comparison operations from.
+  /// </summary>
+  private static BufferPool? _pool;
   
   /// <summary>
   /// The pool to rent buffers for comparison operations from.
   /// </summary>
-  private static readonly BufferPool _pool = new(_COMPARISON_BLOCK_SIZE);
+  private static BufferPool _Pool => _pool!;
   
   /// <summary>
   /// An empty array.
@@ -34,7 +63,38 @@ internal sealed class FileEntry {
   /// </remarks>
   private readonly Lazy<byte[]> _checksum;
 
+  private static void _EnsurePoolInitialized(FileSystemInfo anyEntryFromFilesystem) {
+    if (_pool != null)
+      return;
+    
+    lock(typeof(FileEntry)) {
+      if (_pool != null)
+        return;
+    
+      Console.WriteLine($"[Info] Calculating optimal pool size for {anyEntryFromFilesystem.FullName}");
+      
+      int blockSize;
+      try {
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+          var info = NativeMethods.GetDiskFreeSpace(anyEntryFromFilesystem);
+          blockSize = (int)(256 * info.SectorsPerCluster * info.BytesPerSector);
+          Console.WriteLine($"[Verbose] SectorsPerCluster = {FilesizeFormatter.FormatUnit(info.SectorsPerCluster, true)}, BytesPerSector = {FilesizeFormatter.FormatUnit(info.BytesPerSector, true)}, BytesPerCluster = {FilesizeFormatter.FormatUnit(info.SectorsPerCluster * info.BytesPerSector, true)}, setting block size to {FilesizeFormatter.FormatUnit(blockSize, true)}");
+        } else {
+          blockSize = 4 * 1024 * 1024;
+          Console.WriteLine($"[Warning] Can not determine disk cluster size (fallback block size to {FilesizeFormatter.FormatUnit(blockSize, true)}):OS-Platform unsupported");
+        }
+      } catch (Exception e) {
+        blockSize = 4 * 1024 * 1024;
+        Console.WriteLine($"[Error] Could not determine disk cluster size (fallback block size to {FilesizeFormatter.FormatUnit(blockSize, true)}):{e.Message}");
+      }
+
+      _pool = new(blockSize);
+    }
+  }
+
   public FileEntry(FileInfo source) {
+    _EnsurePoolInitialized(source);
+
     this._Source = source;
     this._checksum = new(this._CalculateChecksum);
     this._FileSize = source.Length;
@@ -71,7 +131,7 @@ internal sealed class FileEntry {
 
     using var provider = SHA512.Create();
 
-    using var rented = _pool.Use();
+    using var rented = _Pool.Use();
     var buffer = rented.Buffer;
 
     // read first block
@@ -116,16 +176,16 @@ internal sealed class FileEntry {
       using var sourceStream = new FileStream(this._Source.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
       using var comparisonStream = new FileStream(other._Source.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-      var bufferLength = _pool.BufferSize;
+      var bufferLength = _Pool.BufferSize;
     
       // NOTE: we're going to compare buffers (A, A') while reading the next blocks (B, B') in already
-      using var sba = _pool.Use();
-      using var cba = _pool.Use();
+      using var sba = _Pool.Use();
+      using var cba = _Pool.Use();
       var sourceBufferA = sba.Buffer;
       var comparisonBufferA = cba.Buffer;
 
-      using var sbb = _pool.Use();
-      using var cbb = _pool.Use();
+      using var sbb = _Pool.Use();
+      using var cbb = _Pool.Use();
       var sourceBufferB = sbb.Buffer;
       var comparisonBufferB = cbb.Buffer;
 

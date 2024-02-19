@@ -46,6 +46,7 @@
     <Compile Include="..\Framework\Backports\System\Diagnostics\CodeAnalysis\NotNullAttribute.cs" Link="Framework\NotNullAttribute.cs" />
     <Compile Include="..\Framework\Backports\System\Diagnostics\CodeAnalysis\DoesNotReturnAttribute.cs" Link="Framework\DoesNotReturnAttribute.cs" />
     <Compile Include="..\Framework\Backports\System\Runtime\CompilerServices\CallerArgumentExpressionAttribute.cs" Link="Framework\CallerArgumentExpressionAttribute.cs" />
+    <Compile Include="..\Framework\Backports\System\Runtime\CompilerServices\IsExternalInit.cs" Link="Framework\IsExternalInit.cs" />
     <Compile Include="..\Framework\Backports\System\Range.cs" Link="Framework\Range.cs" />
     <Compile Include="..\Framework\Backports\System\Index.cs" Link="Framework\Index.cs" />
     <!-- From Corlib -->

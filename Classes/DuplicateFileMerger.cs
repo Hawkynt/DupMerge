@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Libraries;
 
@@ -379,7 +380,7 @@ internal static class DuplicateFileMerger {
         // NOTE: could not enable sparse file - who cares?
       }
 
-      if ((attributes & FileAttributes.Encrypted) == FileAttributes.Encrypted)
+      if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && (attributes & FileAttributes.Encrypted) == FileAttributes.Encrypted)
         temporaryName.Encrypt();
 
       if ((attributes & FileAttributes.Compressed) == FileAttributes.Compressed)
