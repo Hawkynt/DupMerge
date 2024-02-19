@@ -69,88 +69,80 @@ Usage: DupMerge [<options>] [<directories>]
   -ro   , --readonly
       Same as -sro -uro
           ");
-            Environment.Exit(0);
+            Environment.Exit((int)ExitCode.Success);
             break;
           }
         case "-v":
-        case "--info": {
-            configuration.ShowInfoOnly = true;
-            break;
-          }
-        case "-t" when value is not null:
-        case "--threads" when value is not null: {
-            configuration.MaximumCrawlerThreads = int.Parse(value);
-            break;
-          }
-        case "-m" when value is not null:
-        case "--minimum" when value is not null: {
-            configuration.MinimumFileSizeInBytes = long.Parse(value);
-            break;
-          }
-        case "-M" when value is not null:
-        case "--maximum" when value is not null: {
-            configuration.MaximumFileSizeInBytes = long.Parse(value);
-            break;
-          }
+        case "--info":
+          configuration.ShowInfoOnly = true;
+          break;
+        case "-t" when value is not null && int.TryParse(value, out var number):
+          configuration.MaximumCrawlerThreads = number;
+          break;
+        case "--threads" when value is not null && int.TryParse(value, out var number):
+          configuration.MaximumCrawlerThreads = number;
+          break;
+        case "-m" when value is not null && long.TryParse(value, out var number):
+          configuration.MinimumFileSizeInBytes = number;
+          break;
+        case "--minimum" when value is not null && long.TryParse(value, out var number):
+          configuration.MinimumFileSizeInBytes = number;
+          break;
+        case "-M" when value is not null && long.TryParse(value, out var number):
+          configuration.MaximumFileSizeInBytes = number;
+          break;
+        case "--maximum" when value is not null && long.TryParse(value, out var number):
+          configuration.MaximumFileSizeInBytes = number;
+          break;
         case "-s":
-        case "--allow-symlink": {
-            configuration.AlsoTrySymbolicLinks = true;
-            break;
-          }
+        case "--allow-symlink":
+          configuration.AlsoTrySymbolicLinks = true;
+          break;
         case "-D":
-        case "--delete": {
-            configuration.DeleteHardLinkedFiles = true;
-            configuration.DeleteSymbolicLinkedFiles = true;
-            break;
-          }
+        case "--delete":
+          configuration.DeleteHardLinkedFiles = true;
+          configuration.DeleteSymbolicLinkedFiles = true;
+          break;
         case "-Dhl":
-        case "--delete-hardlinks": {
-            configuration.DeleteHardLinkedFiles = true;
-            break;
-          }
+        case "--delete-hardlinks":
+          configuration.DeleteHardLinkedFiles = true;
+          break;
         case "-Dsl":
         case "--delete-symlinks":
-        case "--delete-symboliclinks": {
-            configuration.DeleteSymbolicLinkedFiles = true;
-            break;
-          }
+        case "--delete-symboliclinks":
+          configuration.DeleteSymbolicLinkedFiles = true;
+          break;
         case "-R":
-        case "--remove": {
-            configuration.RemoveHardLinks = true;
-            configuration.RemoveSymbolicLinks = true;
-            break;
-          }
+        case "--remove":
+          configuration.RemoveHardLinks = true;
+          configuration.RemoveSymbolicLinks = true;
+          break;
         case "-Rhl":
-        case "--remove-hardlinks": {
-            configuration.RemoveHardLinks = true;
-            break;
-          }
+        case "--remove-hardlinks":
+          configuration.RemoveHardLinks = true;
+          break;
         case "-Rsl":
         case "--remove-symlinks":
-        case "--remove-symboliclinks": {
-            configuration.RemoveSymbolicLinks = true;
-            break;
-          }
+        case "--remove-symboliclinks":
+          configuration.RemoveSymbolicLinks = true;
+          break;
         case "-sro":
-        case "--set-readonly": {
-            configuration.SetReadOnlyAttributeOnNewHardLinks = true;
-            configuration.SetReadOnlyAttributeOnNewSymbolicLinks = true;
-            break;
-          }
+        case "--set-readonly":
+          configuration.SetReadOnlyAttributeOnNewHardLinks = true;
+          configuration.SetReadOnlyAttributeOnNewSymbolicLinks = true;
+          break;
         case "-uro":
-        case "--update-readonly": {
-            configuration.SetReadOnlyAttributeOnExistingHardLinks = true;
-            configuration.SetReadOnlyAttributeOnExistingSymbolicLinks = true;
-            break;
-          }
+        case "--update-readonly":
+          configuration.SetReadOnlyAttributeOnExistingHardLinks = true;
+          configuration.SetReadOnlyAttributeOnExistingSymbolicLinks = true;
+          break;
         case "-ro":
-        case "--readonly": {
-            configuration.SetReadOnlyAttributeOnNewHardLinks = true;
-            configuration.SetReadOnlyAttributeOnNewSymbolicLinks = true;
-            configuration.SetReadOnlyAttributeOnExistingHardLinks = true;
-            configuration.SetReadOnlyAttributeOnExistingSymbolicLinks = true;
-            break;
-          }
+        case "--readonly":
+          configuration.SetReadOnlyAttributeOnNewHardLinks = true;
+          configuration.SetReadOnlyAttributeOnNewSymbolicLinks = true;
+          configuration.SetReadOnlyAttributeOnExistingHardLinks = true;
+          configuration.SetReadOnlyAttributeOnExistingSymbolicLinks = true;
+          break;
       }
     }
   }
