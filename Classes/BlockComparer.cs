@@ -14,7 +14,7 @@ internal static unsafe class BlockComparer {
   /// <param name="comparisonLength">Length of the comparison.</param>
   /// <returns><c>true</c> if both arrays contain the same data; otherwise, <c>false</c>.</returns>
   public static bool IsEqual(byte[] source, int sourceLength, byte[] comparison, int comparisonLength) {
-    if (sourceLength != comparisonLength)
+    if (sourceLength != comparisonLength)about:blank
       return false;
 
     if (ReferenceEquals(source, comparison))

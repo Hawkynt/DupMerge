@@ -63,6 +63,7 @@
     </Content>
     <Compile Include="..\Framework\Corlib.Extensions\System\Collections\Concurrent\ConcurrentStack.cs" Link="Framework\ConcurrentStack.cs" />
     <Compile Include="..\Framework\Corlib.Extensions\System\Collections\Generic\Enumerable.cs" Link="Framework\Enumerable.cs" />
+    <Compile Include="..\Framework\Corlib.Extensions\System\Collections\Generic\Stack.cs" Link="Framework\Stack.cs" />
     <Compile Include="..\Framework\Corlib.Extensions\System\IO\Path.cs" Link="Framework\Path.cs" />
     <Compile Include="..\Framework\Corlib.Extensions\System\IO\DirectoryInfo.cs" Link="Framework\DirectoryInfo.cs" />
     <Compile Include="..\Framework\Corlib.Extensions\System\IO\Link.cs" Link="Framework\Link.cs">
