@@ -19,8 +19,27 @@ internal sealed class FileEntry {
   /// </summary>
   private static class NativeMethods {
     
+    /// <summary>
+    /// Represents the free space information of a disk.
+    /// </summary>
+    /// <param name="SectorsPerCluster">The number of sectors per cluster.</param>
+    /// <param name="BytesPerSector">The number of bytes per sector.</param>
+    /// <param name="NumberOfFreeClusters">The total number of free clusters on the disk.</param>
+    /// <param name="TotalNumberOfClusters">The total number of clusters on the disk.</param>
     public readonly record struct DiskFreeSpace(uint SectorsPerCluster, uint BytesPerSector, uint NumberOfFreeClusters, uint TotalNumberOfClusters);
 
+    /// <summary>
+    /// [P/Invoke] Calls the native Windows API <c>GetDiskFreeSpaceW</c> function to retrieve disk free space information.
+    /// </summary>
+    /// <param name="lpRootPathName">A string that specifies the root directory of the disk to retrieve information about. This directory must be the root directory of a disk or the current directory.</param>
+    /// <param name="lpSectorsPerCluster">Outputs the number of sectors per cluster.</param>
+    /// <param name="lpBytesPerSector">Outputs the number of bytes per sector.</param>
+    /// <param name="lpNumberOfFreeClusters">Outputs the total number of free clusters on the disk.</param>
+    /// <param name="lpTotalNumberOfClusters">Outputs the total number of clusters on the disk.</param>
+    /// <returns>True if the function succeeds, otherwise false.</returns>
+    /// <remarks>
+    /// This method is marked private as it directly interfaces with a system call and should not be exposed publicly. It is utilized internally by the <see cref="GetDiskFreeSpace"/> method.
+    /// </remarks>
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "GetDiskFreeSpaceW")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool _GetDiskFreeSpace(
@@ -31,6 +50,24 @@ internal sealed class FileEntry {
       out uint lpTotalNumberOfClusters
     );
 
+    /// <summary>
+    /// Retrieves disk free space information for the specified file system entry.
+    /// </summary>
+    /// <param name="entry">The <see cref="FileSystemInfo"/> entry from which to retrieve disk free space information. This can be a file or directory.</param>
+    /// <returns>A <see cref="DiskFreeSpace"/> struct containing the disk's free space information.</returns>
+    /// <exception cref="Win32Exception">Thrown when the underlying Windows API call fails.</exception>
+    /// <remarks>
+    /// This method internally calls the native Windows API <c>GetDiskFreeSpaceW</c> to retrieve the disk free space information. It requires the path root of the provided file system entry (e.g., "C:\") and returns a structured record with the details. If the path root cannot be determined, it defaults to the current directory (".").
+    /// </remarks>
+    /// <example>
+    /// Here is how you can use the <c>GetDiskFreeSpace</c> method:
+    /// <code>
+    /// var driveInfo = new DirectoryInfo("C:\\");
+    /// var diskFreeSpace = NativeMethods.GetDiskFreeSpace(driveInfo);
+    /// Console.WriteLine($"Free Clusters: {diskFreeSpace.NumberOfFreeClusters}");
+    /// </code>
+    /// This example retrieves and prints the number of free clusters on the C: drive.
+    /// </example>
     public static DiskFreeSpace GetDiskFreeSpace(FileSystemInfo entry) {
       if (!_GetDiskFreeSpace(Path.GetPathRoot(entry.FullName) ?? ".", out var sectorsPerCluster, out var bytesPerSector, out var numberOfFreeClusters, out var totalNumberOfClusters))
         throw new Win32Exception(Marshal.GetLastWin32Error());
