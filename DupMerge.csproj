@@ -18,6 +18,7 @@
     <StartupObject>DupMerge.Program</StartupObject>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
+    <ILRepackTargetConfigurations>Debug;Release</ILRepackTargetConfigurations>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>embedded</DebugType>
@@ -37,49 +38,31 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="T4.Build" Version="0.2.4" PrivateAssets="All" />
-
-    <Compile Include="..\Framework\Corlib.Extensions\System.cs" Link="Framework\System.cs" />
-    <Compile Include="..\Framework\Corlib.Extensions\System\IO\FileInfo.cs" Link="Framework\FileInfo.cs" />
-    <None Include="app.manifest" />
-    <!-- From Backports -->
-    <Compile Include="..\Framework\Backports\System\Diagnostics\CodeAnalysis\NotNullAttribute.cs" Link="Framework\NotNullAttribute.cs" />
-    <Compile Include="..\Framework\Backports\System\Diagnostics\CodeAnalysis\DoesNotReturnAttribute.cs" Link="Framework\DoesNotReturnAttribute.cs" />
-    <Compile Include="..\Framework\Backports\System\Runtime\CompilerServices\CallerArgumentExpressionAttribute.cs" Link="Framework\CallerArgumentExpressionAttribute.cs" />
-    <Compile Include="..\Framework\Backports\System\Runtime\CompilerServices\IsExternalInit.cs" Link="Framework\IsExternalInit.cs" />
-    <Compile Include="..\Framework\Backports\System\Range.cs" Link="Framework\Range.cs" />
-    <Compile Include="..\Framework\Backports\System\Index.cs" Link="Framework\Index.cs" />
-    <!-- From Corlib -->
-    <Compile Include="..\Framework\Corlib.Extensions\Guard\Against.cs" Link="Framework\Against.cs" />
-    <Compile Include="..\Framework\Corlib.Extensions\Guard\AlwaysThrow.cs" Link="Framework\AlwaysThrow.cs" />
-    <Compile Include="..\Framework\Corlib.Extensions\Guard\Against.T4.cs" Link="Framework\Against.T4.cs">
-      <AutoGen>True</AutoGen>
+    <Compile Include="..\Framework\Corlib.Extensions\Guard\Against.cs" Link="Libraries\Against.cs" />
+    <Compile Include="..\Framework\Corlib.Extensions\Guard\Against.T4.cs" Link="Libraries\Against.T4.cs">
       <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
       <DependentUpon>Against.T4.tt</DependentUpon>
     </Compile>
-    <Content Include="..\Framework\Corlib.Extensions\Guard\Against.T4.tt">
-      <Link>Framework\Against.T4.tt</Link>
+    <Compile Include="..\Framework\Corlib.Extensions\Guard\AlwaysThrow.cs" Link="Libraries\AlwaysThrow.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FrameworkExtensions.Corlib" Version="1.0.2.413" />
+    <PackageReference Include="ILRepack.FullAuto" Version="1.6.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="T4.Build" Version="0.2.4" PrivateAssets="All" />
+    <None Include="..\Framework\Corlib.Extensions\Guard\Against.T4.tt" Link="Libraries\Against.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Against.T4.cs</LastGenOutput>
-    </Content>
-    <Compile Include="..\Framework\Corlib.Extensions\System\Collections\Concurrent\ConcurrentStack.cs" Link="Framework\ConcurrentStack.cs" />
-    <Compile Include="..\Framework\Corlib.Extensions\System\Collections\Generic\Enumerable.cs" Link="Framework\Enumerable.cs" />
-    <Compile Include="..\Framework\Corlib.Extensions\System\Collections\Generic\Stack.cs" Link="Framework\Stack.cs" />
-    <Compile Include="..\Framework\Corlib.Extensions\System\IO\Path.cs" Link="Framework\Path.cs" />
-    <Compile Include="..\Framework\Corlib.Extensions\System\IO\DirectoryInfo.cs" Link="Framework\DirectoryInfo.cs" />
-    <Compile Include="..\Framework\Corlib.Extensions\System\IO\Link.cs" Link="Framework\Link.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Link.tt</DependentUpon>
-    </Compile>
-    <Content Include="..\Framework\Corlib.Extensions\System\IO\Link.tt">
-      <Link>Framework\Link.tt</Link>
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Link.cs</LastGenOutput>
-    </Content>
-    <Compile Include="..\Framework\Corlib.Extensions\System\IO\Stream.cs" Link="Framework\Stream.cs" />
-    <Compile Include="..\Framework\Corlib.Extensions\System\StaticMethodLocal.cs" Link="Framework\StaticMethodLocal.cs" />
-    <Compile Include="..\Framework\Corlib.Extensions\System\String.cs" Link="Framework\String.cs" />
-    <Compile Include="..\Framework\Corlib.Extensions\System\Char.cs" Link="Framework\Char.cs" />
+    </None>
+    <None Include="app.manifest" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
 </Project>
