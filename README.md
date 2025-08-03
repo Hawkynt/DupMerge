@@ -1,37 +1,41 @@
-# DupMerge
+# 🚀 DupMerge
 
 [![License](https://img.shields.io/badge/License-LGPL_3.0-blue)](https://licenses.nuget.org/LGPL-3.0-or-later)
 ![Language](https://img.shields.io/github/languages/top/Hawkynt/DupMerge?color=purple)
 
-> DupMerge is a powerful tool designed to manage duplicate files efficiently by creating or removing links to them. It offers a variety of options to customize the handling of duplicate files, including creating symbolic or hard links, setting file size limits for processing, and managing read-only attributes for linked files.
+> Tired of duplicate files cluttering up your disk space? DupMerge to the rescue! 🦸‍♂️ This powerful tool helps you manage duplicate files efficiently by creating or removing links to them. Customize how it handles duplicates with a variety of options, from creating symbolic or hard links to setting file size limits and managing read-only attributes.
 
-## Features
+## ✨ Features
 
-- **Efficient File Handling:** Quickly identifies duplicate files and creates links to them, reducing disk space usage.
-- **Customizable Operations:** Offers options for creating symbolic links, deleting links, and removing links with file copies.
-- **Flexible File Size Limits:** Allows specifying minimum and maximum file sizes for processing.
-- **Multithreading Support:** Utilizes multiple threads for faster file processing, automatically adjusting to the number of CPU cores.
-- **Read-Only Attribute Management:** Provides options to set or update the read-only attribute for linked files.
-- **Versatile Linking Options:** Enables the creation of both hard links and symbolic links, providing flexibility in file management.
+-   🚀 **Efficient File Handling:** Quickly identifies duplicate files and creates links to them, saving valuable disk space.
+-   🔧 **Customizable Operations:** Offers a range of options for creating symbolic links, deleting links, and even replacing links with file copies.
+-   🔩 **Flexible File Size Limits:** Allows you to specify minimum and maximum file sizes for processing, so you only handle the files you want.
+-   ⚡ **Multithreading Support:** Utilizes multiple threads for faster file processing, automatically adjusting to your CPU cores for optimal performance.
+-   🔒 **Read-Only Attribute Management:** Provides options to set or update the read-only attribute for linked files.
+-   🔗 **Versatile Linking Options:** Enables the creation of both hard links and symbolic links, giving you flexibility in how you manage your files.
 
-## Build from Source
+## 🛠️ Build from Source
 
-DupMerge is developed in C# and can be compiled using the .NET SDK. To install and build DupMerge, you will need to have the .NET SDK installed on your machine. Follow these steps:
+DupMerge is developed in C# and can be compiled using the .NET SDK. To get started, you'll need the .NET SDK installed on your machine.
 
 ```batch
-rem Clone the repository
+# Clone the repository
 git clone https://github.com/Hawkynt/DupMerge.git
-rem Clone the C--FrameworkExtensions repository into a parallel directory named Framework, because we gonna need some files from it to build a monolithic executable
+
+# C--FrameworkExtensions is needed for building a monolithic executable.
+# Clone it into a parallel directory named Framework.
 git clone https://github.com/Hawkynt/C--FrameworkExtensions.git Framework
-rem Navigate to the project directory
+
+# Navigate to the project directory
 cd DupMerge
-rem Build the project using .NET CLI
+
+# Build the project
 dotnet build
 ```
 
-This will compile the application and produce an executable within the `bin/` directory.
+This will compile the application and place the executable in the `bin/` directory.
 
-## Usage
+## 💻 Usage
 
 ```batch
 DupMerge [<options>] [<directories>]
@@ -39,38 +43,38 @@ DupMerge [<options>] [<directories>]
 
 ### Options
 
-- `-v`, `--info`: Show information only, without making any changes.
-- `-t <n>`, `--threads <n>`: Specify the number of threads to use for crawling. Defaults to the number of CPU cores or 8, whichever is less.
-- `-m <n>`, `--minimum <n>`: Specify the minimum file size to process. Defaults to 1.
-- `-M <n>`, `--maximum <n>`: Specify the maximum file size to process.
-- `-s`, `--allow-symlink`: Allow creating symbolic links if a hardlink cannot be created.
-- `-Dhl`, `--delete-hardlinks`: Delete all hard links.
-- `-Dsl`, `--delete-symlinks`, `--delete-symboliclinks`: Delete all symbolic links.
-- `-D`, `--delete`: Same as `-Dhl -Dsl`.
-- `-Rhl`, `--remove-hardlinks`: Remove hard links and replace them with a copy of the linked file.
-- `-Rsl`, `--remove-symlinks`, `--remove-symboliclinks`: Remove symbolic links and replace them with a copy of the linked file.
-- `-R`, `--remove`: Same as `-Rhl -Rsl`.
-- `-sro`, `--set-readonly`: Set the read-only attribute on newly created sym/hard-links.
-- `-uro`, `--update-readonly`: Set the read-only attribute to existing sym/hard-links.
-- `-ro`, `--readonly`: Same as `-sro -uro`.
+-   `-v`, `--info`: Show information only, without making any changes.
+-   `-t <n>`, `--threads <n>`: Specify the number of threads to use for crawling. Defaults to the number of CPU cores (up to 8).
+-   `-m <n>`, `--minimum <n>`: Specify the minimum file size to process (default: 1).
+-   `-M <n>`, `--maximum <n>`: Specify the maximum file size to process.
+-   `-s`, `--allow-symlink`: Allow creating symbolic links if a hardlink cannot be created.
+-   `-Dhl`, `--delete-hardlinks`: Delete all hard links.
+-   `-Dsl`, `--delete-symlinks`, `--delete-symboliclinks`: Delete all symbolic links.
+-   `-D`, `--delete`: Same as `-Dhl -Dsl`.
+-   `-Rhl`, `--remove-hardlinks`: Remove hard links and replace them with a copy of the linked file.
+-   `-Rsl`, `--remove-symlinks`, `--remove-symboliclinks`: Remove symbolic links and replace them with a copy of the linked file.
+-   `-R`, `--remove`: Same as `-Rhl -Rsl`.
+-   `-sro`, `--set-readonly`: Set the read-only attribute on newly created sym/hard-links.
+-   `-uro`, `--update-readonly`: Set the read-only attribute to existing sym/hard-links.
+-   `-ro`, `--readonly`: Same as `-sro -uro`.
 
-### Examples
+### Examples 💡
 
 ```batch
-rem Scan the current directory for duplicates, show info only
+# Scan the current directory for duplicates and show info only
 DupMerge --info .
 
-rem Create hardlinks for duplicates in multiple directories, using 4 threads
+# Create hardlinks for duplicates in multiple directories, using 4 threads
 DupMerge.exe -t 4 C:\path\to\dir1 C:\path\to\dir2
 
-rem Delete all symbolic links in the specified directory
+# Delete all symbolic links in the specified directory
 DupMerge.exe --delete-symlinks C:\path\to\dir
 ```
 
-## Contributing
+## 🤝 Contributing
 
-We welcome contributions to DupMerge! If you have a bug report, feature request, or a patch, please feel free to submit an issue or pull request on GitHub. For more detailed information, please see our [CONTRIBUTING](CONTRIBUTING.md) file.
+We welcome contributions to DupMerge! If you have a bug report, feature request, or a patch, please feel free to submit an issue or pull request on GitHub.
 
-## License
+## 📜 License
 
-This project is licensed under the GPL v2 License - see the [license](LICENSE) file for details.
+This project is licensed under the LGPL-3.0-or-later License - see the [LICENSE](LICENSE) file for details.
