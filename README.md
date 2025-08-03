@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/badge/License-LGPL_3.0-blue)](https://licenses.nuget.org/LGPL-3.0-or-later)
 ![Language](https://img.shields.io/github/languages/top/Hawkynt/DupMerge?color=purple)
 
-DupMerge is a powerful tool designed to manage duplicate files efficiently by creating or removing links to them. It offers a variety of options to customize the handling of duplicate files, including creating symbolic or hard links, setting file size limits for processing, and managing read-only attributes for linked files.
+> DupMerge is a powerful tool designed to manage duplicate files efficiently by creating or removing links to them. It offers a variety of options to customize the handling of duplicate files, including creating symbolic or hard links, setting file size limits for processing, and managing read-only attributes for linked files.
 
 ## Features
 
