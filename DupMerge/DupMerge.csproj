@@ -19,9 +19,9 @@
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <!-- ILRepack chokes on reference assemblies (Microsoft.CSharp / VisualBasic
-         / Win32.* with Zero PeKind) during `dotnet publish --self-contained
-         -p:PublishSingleFile=true` on linux-x64. CI can disable it with
-         -p:DisableILRepack=true. -->
+         / Win32.* with Zero PeKind) during self-contained PublishSingleFile on
+         linux-x64. CI sets DisableILRepack=true to skip it; the single-file
+         bundle already provides what ILRepack was adding. -->
     <ILRepackTargetConfigurations Condition="'$(DisableILRepack)' != 'true'">Debug;Release</ILRepackTargetConfigurations>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
