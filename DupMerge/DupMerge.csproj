@@ -18,7 +18,11 @@
     <StartupObject>DupMerge.Program</StartupObject>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
-    <ILRepackTargetConfigurations>Debug;Release</ILRepackTargetConfigurations>
+    <!-- ILRepack chokes on reference assemblies (Microsoft.CSharp / VisualBasic
+         / Win32.* with Zero PeKind) during `dotnet publish --self-contained
+         -p:PublishSingleFile=true` on linux-x64. CI can disable it with
+         -p:DisableILRepack=true. -->
+    <ILRepackTargetConfigurations Condition="'$(DisableILRepack)' != 'true'">Debug;Release</ILRepackTargetConfigurations>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>embedded</DebugType>

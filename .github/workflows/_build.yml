@@ -68,7 +68,11 @@ jobs:
 
       - name: Publish net7.0 ${{ matrix.rid }} (single-file, self-contained)
         working-directory: DupMerge
-        run: dotnet publish DupMerge/DupMerge.csproj -r ${{ matrix.rid }} -c Release -f net7.0 --self-contained -p:PublishSingleFile=true --output publish/${{ matrix.rid }}
+        # DisableILRepack: PublishSingleFile already produces a single-file
+        # bundle; ILRepack would additionally try to repack framework ref
+        # assemblies (Microsoft.CSharp.dll etc.) that have Zero PeKind and
+        # fail loading.
+        run: dotnet publish DupMerge/DupMerge.csproj -r ${{ matrix.rid }} -c Release -f net7.0 --self-contained -p:PublishSingleFile=true -p:DisableILRepack=true --output publish/${{ matrix.rid }}
 
       - name: Package zip
         shell: bash
