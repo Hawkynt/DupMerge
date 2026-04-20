@@ -1,0 +1,69 @@
+name: CI
+
+# DupMerge needs a sibling `Framework/` directory (C--FrameworkExtensions repo)
+# for its `..\..\Framework\` csproj imports. We check out both side-by-side.
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_call: {}
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout DupMerge
+        uses: actions/checkout@v4
+        with:
+          path: DupMerge
+          fetch-depth: 0
+
+      - name: Checkout FrameworkExtensions (sibling)
+        uses: actions/checkout@v4
+        with:
+          repository: Hawkynt/C--FrameworkExtensions
+          path: Framework
+          fetch-depth: 1
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            7.x
+            8.x
+
+      - name: Stamp versions
+        shell: bash
+        working-directory: DupMerge
+        run: perl .github/workflows/scripts/version.pl --stamp
+
+      - name: Restore
+        working-directory: DupMerge
+        run: dotnet restore DupMerge.sln
+
+      # net48 only builds on Windows; on ubuntu build net7.0 target only.
+      - name: Build (windows - all TFMs)
+        if: matrix.os == 'windows-latest'
+        working-directory: DupMerge
+        run: dotnet build DupMerge.sln --configuration Release --no-restore
+
+      - name: Build (ubuntu - net7.0)
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: DupMerge
+        run: dotnet build DupMerge.sln --configuration Release --no-restore -f net7.0 || dotnet build DupMerge/DupMerge.csproj --configuration Release --no-restore -f net7.0
+
+      - name: Test
+        working-directory: DupMerge
+        run: dotnet test DupMerge.Tests/DupMerge.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=tests.trx"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}
+          path: 'DupMerge/**/TestResults/*.trx'

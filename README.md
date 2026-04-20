@@ -1,5 +1,9 @@
 # 🚀 DupMerge
 
+[![CI](https://github.com/Hawkynt/DupMerge/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Hawkynt/DupMerge/actions/workflows/ci.yml)
+[![Release](https://github.com/Hawkynt/DupMerge/actions/workflows/release.yml/badge.svg)](https://github.com/Hawkynt/DupMerge/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/Hawkynt/DupMerge?label=release&sort=semver)](https://github.com/Hawkynt/DupMerge/releases/latest)
+[![Latest nightly](https://img.shields.io/github/v/release/Hawkynt/DupMerge?include_prereleases&label=nightly&sort=date)](https://github.com/Hawkynt/DupMerge/releases?q=prerelease%3Atrue)
 [![License](https://img.shields.io/badge/License-LGPL_3.0-blue)](https://licenses.nuget.org/LGPL-3.0-or-later)
 ![Language](https://img.shields.io/github/languages/top/Hawkynt/DupMerge?color=purple)
 

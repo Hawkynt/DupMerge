@@ -1,0 +1,84 @@
+name: Build artifacts
+
+# DupMerge is multi-target (net48 + net7.0). We publish self-contained single-file
+# net7.0 for both win-x64 and linux-x64. The legacy net48 target stays for local
+# builds but isn't shipped (no .NET 4.8 runtime on modern Linux).
+on:
+  workflow_call:
+    inputs:
+      version: { required: true, type: string }
+      release-kind: { required: true, type: string }
+      changelog-flag: { required: true, type: string }
+      ref: { required: false, type: string, default: "" }
+    outputs:
+      win-artifact:
+        value: ${{ jobs.build.outputs.win-artifact }}
+      linux-artifact:
+        value: ${{ jobs.build.outputs.linux-artifact }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os:  windows-latest
+            exe: DupMerge.exe
+          - rid: linux-x64
+            os:  ubuntu-latest
+            exe: DupMerge
+    runs-on: ${{ matrix.os }}
+    outputs:
+      win-artifact:   DupMerge-win-x64-${{ inputs.version }}
+      linux-artifact: DupMerge-linux-x64-${{ inputs.version }}
+    steps:
+      - name: Checkout DupMerge
+        uses: actions/checkout@v4
+        with:
+          path: DupMerge
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Checkout FrameworkExtensions (sibling)
+        uses: actions/checkout@v4
+        with:
+          repository: Hawkynt/C--FrameworkExtensions
+          path: Framework
+          fetch-depth: 1
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            7.x
+            8.x
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+
+      - name: Update CHANGELOG
+        shell: bash
+        working-directory: DupMerge
+        run: node .github/workflows/scripts/update-changelog.mjs ${{ inputs.changelog-flag }}
+
+      - name: Stamp versions
+        shell: bash
+        working-directory: DupMerge
+        run: perl .github/workflows/scripts/version.pl --stamp
+
+      - name: Publish net7.0 ${{ matrix.rid }} (single-file, self-contained)
+        working-directory: DupMerge
+        run: dotnet publish DupMerge/DupMerge.csproj -r ${{ matrix.rid }} -c Release -f net7.0 --self-contained -p:PublishSingleFile=true --output publish/${{ matrix.rid }}
+
+      - name: Package zip
+        shell: bash
+        working-directory: DupMerge
+        run: |
+          v="${{ inputs.version }}"
+          (cd publish/${{ matrix.rid }} && zip -r "../../DupMerge-${{ matrix.rid }}-${v}.zip" .)
+          ls -la DupMerge-${{ matrix.rid }}-${v}.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DupMerge-${{ matrix.rid }}-${{ inputs.version }}
+          path: DupMerge/DupMerge-${{ matrix.rid }}-${{ inputs.version }}.zip
