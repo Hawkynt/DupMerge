@@ -47,16 +47,20 @@ jobs:
         working-directory: DupMerge
         run: dotnet restore DupMerge.sln
 
-      # net48 only builds on Windows; on ubuntu build net7.0 target only.
-      - name: Build (windows - all TFMs)
+      # DupMerge multi-targets net48;net7.0, DupMerge.Tests targets net8.0.
+      # On ubuntu, net48 can't build (Framework-only), so only the test
+      # project (net8.0) restores its targets. Build/test ubuntu's net8.0 leg.
+      - name: Build (windows)
         if: matrix.os == 'windows-latest'
         working-directory: DupMerge
         run: dotnet build DupMerge.sln --configuration Release --no-restore
 
-      - name: Build (ubuntu - net7.0)
+      - name: Build (ubuntu - net7.0 + net8.0 targets only)
         if: matrix.os == 'ubuntu-latest'
         working-directory: DupMerge
-        run: dotnet build DupMerge.sln --configuration Release --no-restore -f net7.0 || dotnet build DupMerge/DupMerge.csproj --configuration Release --no-restore -f net7.0
+        run: |
+          dotnet build DupMerge/DupMerge.csproj --configuration Release --no-restore -f net7.0
+          dotnet build DupMerge.Tests/DupMerge.Tests.csproj --configuration Release --no-restore
 
       - name: Test
         working-directory: DupMerge
