@@ -18,11 +18,13 @@
     <StartupObject>DupMerge.Program</StartupObject>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
-    <!-- ILRepack chokes on reference assemblies (Microsoft.CSharp / VisualBasic
-         / Win32.* with Zero PeKind) during self-contained PublishSingleFile on
-         linux-x64. CI sets DisableILRepack=true to skip it; the single-file
-         bundle already provides what ILRepack was adding. -->
-    <ILRepackTargetConfigurations Condition="'$(DisableILRepack)' != 'true'">Debug;Release</ILRepackTargetConfigurations>
+    <ILRepackTargetConfigurations>Debug;Release</ILRepackTargetConfigurations>
+    <!-- ILRepack chokes on reference assemblies (Microsoft.CSharp, VisualBasic,
+         Win32.* with Zero PeKind) during self-contained PublishSingleFile on
+         linux-x64. CI passes DisableILRepack=true which turns off the package's
+         default ILRepackBuildEnable. The PublishSingleFile bundle already
+         provides single-file packaging. -->
+    <ILRepackBuildEnable Condition="'$(DisableILRepack)' == 'true'">False</ILRepackBuildEnable>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>embedded</DebugType>
