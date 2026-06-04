@@ -10,6 +10,11 @@ on:
     branches: [master, main]
   workflow_call: {}
 
+# Force JavaScript-based actions to run on Node 24 instead of the deprecated Node 20 ahead of
+# the 2026-06-16 hard cutover, until we bump each action to a Node-24-native major version.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   test:
     name: ${{ matrix.os }}
@@ -64,7 +69,14 @@ jobs:
 
       - name: Test
         working-directory: DupMerge
-        run: dotnet test DupMerge.Tests/DupMerge.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=tests.trx"
+        run: dotnet test DupMerge.Tests/DupMerge.Tests.csproj --configuration Release --no-build --filter "TestCategory!=Performance" --logger "trx;LogFileName=tests.trx"
+
+      # Wall-clock performance tests are advisory — a slow shared runner must not
+      # fail the build on a timing assertion.
+      - name: Performance tests (advisory)
+        continue-on-error: true
+        working-directory: DupMerge
+        run: dotnet test DupMerge.Tests/DupMerge.Tests.csproj --configuration Release --no-build --filter "TestCategory=Performance" --logger "trx;LogFileName=perf-tests.trx"
 
       - uses: actions/upload-artifact@v4
         if: always()
