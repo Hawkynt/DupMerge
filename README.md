@@ -1,10 +1,10 @@
 # 🚀 DupMerge
 
-[![License](https://img.shields.io/github/license/Hawkynt/DupMerge)](https://github.com/Hawkynt/DupMerge/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/Hawkynt/DupMerge)](https://github.com/Hawkynt/DupMerge/blob/main/LICENSE)
 [![Language](https://img.shields.io/github/languages/top/Hawkynt/DupMerge?color=8957D5)](https://github.com/Hawkynt/DupMerge)
 
-[![CI](https://github.com/Hawkynt/DupMerge/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Hawkynt/DupMerge/actions/workflows/ci.yml)
-![Last Commit](https://img.shields.io/github/last-commit/Hawkynt/DupMerge?branch=master)
+[![CI](https://github.com/Hawkynt/DupMerge/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Hawkynt/DupMerge/actions/workflows/ci.yml)
+![Last Commit](https://img.shields.io/github/last-commit/Hawkynt/DupMerge?branch=main)
 ![Activity](https://img.shields.io/github/commit-activity/m/Hawkynt/DupMerge)
 
 [![Stars](https://img.shields.io/github/stars/Hawkynt/DupMerge?color=FFD700)](https://github.com/Hawkynt/DupMerge/stargazers)
@@ -49,7 +49,7 @@ dotnet build
 
 This will compile the application and place the executable in the `bin/` directory.
 
-## 💻 Usage
+## 🚀 Usage
 
 ```batch
 DupMerge [<options>] [<directories>]
@@ -89,6 +89,13 @@ DupMerge.exe --delete-symlinks C:\path\to\dir
 
 We welcome contributions to DupMerge! If you have a bug report, feature request, or a patch, please feel free to submit an issue or pull request on GitHub.
 
+## ❤️ Support
+
+If this project saves you time or money, consider supporting its development:
+
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?logo=githubsponsors)](https://github.com/sponsors/Hawkynt)
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-00457C?logo=paypal)](https://www.paypal.me/hawkynt)
+
 ## 📜 License
 
-This project is licensed under the LGPL-3.0-or-later License - see the [LICENSE](LICENSE) file for details.
+Licensed under LGPL-3.0-or-later — see [LICENSE](LICENSE).
