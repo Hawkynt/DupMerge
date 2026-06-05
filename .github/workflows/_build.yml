@@ -82,9 +82,11 @@ jobs:
       - name: Package zip
         shell: bash
         working-directory: DupMerge
+        # 7z instead of zip: Git Bash on windows-latest has no zip binary,
+        # but 7z is preinstalled on both runner images.
         run: |
           v="${{ inputs.version }}"
-          (cd publish/${{ matrix.rid }} && zip -r "../../DupMerge-${{ matrix.rid }}-${v}.zip" .)
+          (cd publish/${{ matrix.rid }} && 7z a -tzip "../../DupMerge-${{ matrix.rid }}-${v}.zip" .)
           ls -la DupMerge-${{ matrix.rid }}-${v}.zip
 
       - uses: actions/upload-artifact@v4
