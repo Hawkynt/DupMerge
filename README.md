@@ -14,7 +14,7 @@
 ![Repo Size](https://img.shields.io/github/repo-size/Hawkynt/DupMerge?color=FF9800)
 
 [![Release](https://img.shields.io/github/v/release/Hawkynt/DupMerge)](https://github.com/Hawkynt/DupMerge/releases/latest)
-[![Nightly](https://img.shields.io/github/v/release/Hawkynt/DupMerge?include_prereleases&sort=date&label=nightly&color=FF9800)](https://github.com/Hawkynt/DupMerge/releases)
+[![Nightly](https://img.shields.io/github/v/release/Hawkynt/DupMerge?include_prereleases&sort=date&filter=nightly-*&label=nightly&color=FF9800)](https://github.com/Hawkynt/DupMerge/releases)
 [![Downloads](https://img.shields.io/github/downloads/Hawkynt/DupMerge/total)](https://github.com/Hawkynt/DupMerge/releases)
 
 > Tired of duplicate files cluttering up your disk space? DupMerge to the rescue! 🦸‍♂️ This powerful tool helps you manage duplicate files efficiently by creating or removing links to them. Customize how it handles duplicates with a variety of options, from creating symbolic or hard links to setting file size limits and managing read-only attributes.
