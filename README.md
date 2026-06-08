@@ -13,7 +13,7 @@
 ![Code Size](https://img.shields.io/github/languages/code-size/Hawkynt/DupMerge?color=4CAF50)
 ![Repo Size](https://img.shields.io/github/repo-size/Hawkynt/DupMerge?color=FF9800)
 
-[![Release](https://img.shields.io/github/v/release/Hawkynt/DupMerge?sort=semver)](https://github.com/Hawkynt/DupMerge/releases/latest)
+[![Release](https://img.shields.io/github/v/release/Hawkynt/DupMerge)](https://github.com/Hawkynt/DupMerge/releases/latest)
 [![Nightly](https://img.shields.io/github/v/release/Hawkynt/DupMerge?include_prereleases&sort=date&label=nightly&color=FF9800)](https://github.com/Hawkynt/DupMerge/releases)
 [![Downloads](https://img.shields.io/github/downloads/Hawkynt/DupMerge/total)](https://github.com/Hawkynt/DupMerge/releases)
 
