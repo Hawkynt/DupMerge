@@ -19,6 +19,16 @@
 
 > Tired of duplicate files cluttering up your disk space? DupMerge to the rescue! 🦸‍♂️ This powerful tool helps you manage duplicate files efficiently by creating or removing links to them. Customize how it handles duplicates with a variety of options, from creating symbolic or hard links to setting file size limits and managing read-only attributes.
 
+## 🧭 Vision
+
+Identical files are the cheapest storage win there is: the disk is already holding the bytes, twice.
+DupMerge finds them and replaces the copies with links, so the space comes back without anything
+being deleted and without any path changing.
+
+The care goes into the reversal. Hard links, symbolic links and real copies are all things you might
+want back, so the tool goes in both directions — it will unlink as readily as it links, and it stays
+explicit about size limits and read-only attributes rather than deciding for you.
+
 ## ✨ Features
 
 -   🚀 **Efficient File Handling:** Quickly identifies duplicate files and creates links to them, saving valuable disk space.
@@ -28,28 +38,13 @@
 -   🔒 **Read-Only Attribute Management:** Provides options to set or update the read-only attribute for linked files.
 -   🔗 **Versatile Linking Options:** Enables the creation of both hard links and symbolic links, giving you flexibility in how you manage your files.
 
-## 🛠️ Build from Source
+## 📦 Installation
 
-DupMerge is developed in C# and can be compiled using the .NET SDK. To get started, you'll need the .NET SDK installed on your machine.
+Download the executable from the [latest release](../../releases/latest) (or a `nightly-*`
+prerelease) and put it on your `PATH`. It is a single self-contained binary; there is nothing to
+install.
 
-```batch
-# Clone the repository
-git clone https://github.com/Hawkynt/DupMerge.git
-
-# C--FrameworkExtensions is needed for building a monolithic executable.
-# Clone it into a parallel directory named Framework.
-git clone https://github.com/Hawkynt/C--FrameworkExtensions.git Framework
-
-# Navigate to the project directory
-cd DupMerge
-
-# Build the project
-dotnet build
-```
-
-This will compile the application and place the executable in the `bin/` directory.
-
-## 🚀 Usage
+## 🚀 Quick start
 
 ```batch
 DupMerge [<options>] [<directories>]
@@ -84,6 +79,27 @@ DupMerge.exe -t 4 C:\path\to\dir1 C:\path\to\dir2
 # Delete all symbolic links in the specified directory
 DupMerge.exe --delete-symlinks C:\path\to\dir
 ```
+
+## 🛠️ Building
+
+DupMerge is developed in C# and can be compiled using the .NET SDK. To get started, you'll need the .NET SDK installed on your machine.
+
+```batch
+# Clone the repository
+git clone https://github.com/Hawkynt/DupMerge.git
+
+# C--FrameworkExtensions is needed for building a monolithic executable.
+# Clone it into a parallel directory named Framework.
+git clone https://github.com/Hawkynt/C--FrameworkExtensions.git Framework
+
+# Navigate to the project directory
+cd DupMerge
+
+# Build the project
+dotnet build
+```
+
+This will compile the application and place the executable in the `bin/` directory.
 
 ## 🤝 Contributing
 
